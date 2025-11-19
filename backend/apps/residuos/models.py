@@ -18,7 +18,6 @@ class LotesResiduos(models.Model):
     tipo_residuo = models.ForeignKey(TipoResiduo, on_delete=models.CASCADE)
     peso_kg = models.DecimalField(max_digits=10, decimal_places=2)
     humedad = models.DecimalField(max_digits=5, decimal_places=2, help_text="Porcentaje de humedad")
-    tamanio_particula = models.CharField(max_length=50, help_text="Ej: 5-10 mm")
     especie = models.ForeignKey(Especie, on_delete=models.CASCADE, default=1)  # Asumir ID 1 para pino
     contaminacion = models.TextField(blank=True)
     fecha_ingreso = models.DateTimeField(auto_now_add=True)

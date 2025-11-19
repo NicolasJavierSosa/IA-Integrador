@@ -1,1 +1,0 @@
-para ejecutar el front por ahora solo necesitas hacer un npm install y despues npm run dev

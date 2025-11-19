@@ -46,7 +46,7 @@ const CrearPrediccion = () => {
         </Link>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Crear Nueva Predicción de Ventas</h1>
         <div className="bg-white shadow rounded-lg p-6">
-          <p className="mb-4">Ingresa los datos para crear una nueva predicción de ventas de madera.</p>
+          <p className="mb-4">Ingresa los datos para crear una nueva predicción de ventasde subproductos.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.maquinaria',
     'apps.residuos',
     'apps.subproductos',
+    'apps.predicciones',
 ]
 
 MIDDLEWARE = [

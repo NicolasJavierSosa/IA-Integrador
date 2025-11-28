@@ -1,20 +1,23 @@
 import { Routes, Route } from 'react-router-dom'
-import Inicio from './pages/Inicio'
-import CrearPrediccion from './pages/prediccion/CrearPrediccion'
-import HistorialPredicciones from './pages/prediccion/HistorialPredicciones'
-import Footer from './components/Footer'
+import Dashboard from './pages/Dashboard'
+import SistemaExperto from './pages/SistemaExperto'
+import Maquinarias from './pages/Maquinarias'
+import Mercado from './pages/Mercado'
+import Layout from './components/Layout'
 import './App.css'
 
 function App() {
   return (
-    <div className="App">
+    <Layout>
       <Routes>
-        <Route path="/" element={<Inicio />} />
-        <Route path="/crear-prediccion" element={<CrearPrediccion />} />
-        <Route path="/historial" element={<HistorialPredicciones />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/sistema-experto" element={<SistemaExperto />} />
+        <Route path="/maquinarias" element={<Maquinarias />} />
+        <Route path="/mercado" element={<Mercado />} />
+        <Route path="/subproductos" element={<SistemaExperto />} />
+        <Route path="/historial" element={<SistemaExperto />} /> {/* Placeholder */}
       </Routes>
-      <Footer />
-    </div>
+    </Layout>
   )
 }
 

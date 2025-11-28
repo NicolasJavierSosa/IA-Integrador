@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+:root {
+  --color-navy-900: #0B1120;
+  --color-navy-800: #151F32;
+  --color-navy-700: #1E293B;
+  --color-accent-500: #D97706;
+  --color-accent-600: #B45309;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-navy-900);
+    color: #F1F5F9;
+    font-family: var(--font-sans);
+  }
+}

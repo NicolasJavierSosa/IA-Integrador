@@ -1,161 +1,237 @@
-import React from 'react';
-import Card from '../components/ui/Card';
-import Input, { Select } from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import StatusBadge from '../components/ui/StatusBadge';
-import {
-    MagnifyingGlassIcon,
-    PencilSquareIcon,
-    ArrowPathIcon,
-    ExclamationTriangleIcon
-} from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { Select } from '../components/ui/Input';
+import Switch from '../components/ui/Switch';
+import { CurrencyDollarIcon, TruckIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 const Mercado = () => {
-    const products = [
-        { id: 1, name: 'Chips de Pino (Limpios)', unit: 'Ton', price: 18000, trend: 'Estable' },
-        { id: 2, name: 'Aserrín Seco', unit: 'Ton', price: 9200, trend: 'Estable' },
-        { id: 3, name: 'Costeros (Leña)', unit: 'Ton', price: 6500, trend: 'Baja' },
-        { id: 4, name: 'Pellets Premium (Bolsa 15kg)', unit: 'Unidad', price: 4500, trend: 'Sube' },
-        { id: 5, name: 'Viruta de Eucalipto', unit: 'Ton', price: 11000, trend: 'Sube' },
-        { id: 6, name: 'Corteza Triturada', unit: 'm³', price: 3200, trend: 'Estable' },
-    ];
+    // State for Section A: Precios y Economía
+    const [marketData, setMarketData] = useState({
+        pelletsPrice: 'Medio',
+        pelletsVolatility: false,
+        chipsPrice: 'Medio',
+        chipsVolatility: false,
+        fingerJointPrice: 0,
+        freightCost: 0
+    });
+
+    // State for Section B: Demandas Locales
+    const [demands, setDemands] = useState({
+        sustrato: true,
+        compost: false,
+        pellets: true,
+        biomasa: false
+    });
+
+    // State for Section C: Estado de la Planta
+    const [plantStatus, setPlantStatus] = useState({
+        caldera: true,
+        stockBiomasa: true, // true = Suficiente, false = Crítico
+        almacenamientoPellets: 75,
+        espacioCompostaje: true // true = Disponible, false = Limitado
+    });
+
+    const handleMarketChange = (field, value) => {
+        setMarketData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleDemandChange = (field, value) => {
+        setDemands(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handlePlantChange = (field, value) => {
+        setPlantStatus(prev => ({ ...prev, [field]: value }));
+    };
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-white">Cotizaciones de Mercado</h2>
-                    <p className="text-slate-400">Gestión de precios de referencia para subproductos madereros.</p>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm">
-                    <div className="text-[10px] text-slate-500 text-right leading-tight">
-                        ÚLTIMA SINCRONIZACIÓN<br />
-                        <span className="font-bold text-slate-800">Hoy, 09:41 AM</span>
-                    </div>
-                    <ArrowPathIcon className="w-4 h-4 text-slate-400" />
-                </div>
+            <div>
+                <h2 className="text-2xl font-bold text-white">Mercado y Operaciones</h2>
+                <p className="text-slate-400">Gestión de precios, demandas y estado de la planta.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column: Table */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Search Bar */}
-                    <div className="flex gap-4">
-                        <div className="relative flex-1">
-                            <MagnifyingGlassIcon className="absolute left-3 top-2.5 w-5 h-5 text-slate-500" />
-                            <input
-                                type="text"
-                                placeholder="Buscar producto (ej: Chips, Pellet)..."
-                                className="w-full bg-white rounded-lg pl-10 pr-4 py-2 text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-accent-500"
+                {/* Sección A: Precios y Economía */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                        <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                            <CurrencyDollarIcon className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-bold text-slate-800">Precios y Economía</h3>
+                    </div>
+
+                    <div className="space-y-5">
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Precio Mercado Pellets</label>
+                            <Select
+                                value={marketData.pelletsPrice}
+                                onChange={(e) => handleMarketChange('pelletsPrice', e.target.value)}
+                                options={[
+                                    { value: 'Alto', label: 'Alto' },
+                                    { value: 'Medio', label: 'Medio' },
+                                    { value: 'Bajo', label: 'Bajo' }
+                                ]}
                             />
                         </div>
-                        <Select
-                            options={[{ value: 'todos', label: 'Todos' }]}
-                            className="w-32"
-                            // Override styles for white background
-                            style={{ backgroundColor: 'white', color: '#1e293b', borderColor: '#e2e8f0' }}
-                        />
-                    </div>
 
-                    {/* Table */}
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
-                                <tr>
-                                    <th className="px-6 py-3">PRODUCTO / MATERIAL</th>
-                                    <th className="px-6 py-3">UNIDAD</th>
-                                    <th className="px-6 py-3 text-right">PRECIO MERCADO ($)</th>
-                                    <th className="px-6 py-3 text-center">TENDENCIA</th>
-                                    <th className="px-6 py-3 text-center">ACCIÓN</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {products.map((product) => (
-                                    <tr key={product.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-slate-800">
-                                            {product.name}
-                                            <div className="text-xs text-slate-400 font-normal">Biomasa / Celulosa</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-500">{product.unit}</td>
-                                        <td className="px-6 py-4 text-right font-bold text-slate-800">
-                                            $ {product.price.toLocaleString('es-AR')}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <StatusBadge status={product.trend} type="pill" />
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button className="text-slate-400 hover:text-accent-600 transition-colors">
-                                                <PencilSquareIcon className="w-5 h-5" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center">
-                            <button className="text-xs font-medium text-accent-600 hover:text-accent-700">
-                                Ver historial completo
-                            </button>
+                        <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg">
+                            <span className="text-sm text-slate-600">Volatilidad Precio Pellets</span>
+                            <Switch
+                                checked={marketData.pelletsVolatility}
+                                onChange={(val) => handleMarketChange('pelletsVolatility', val)}
+                                label={marketData.pelletsVolatility ? 'Alta' : 'Baja'}
+                                activeColor="bg-red-500"
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Precio Mercado Chips</label>
+                            <Select
+                                value={marketData.chipsPrice}
+                                onChange={(e) => handleMarketChange('chipsPrice', e.target.value)}
+                                options={[
+                                    { value: 'Alto', label: 'Alto' },
+                                    { value: 'Medio', label: 'Medio' },
+                                    { value: 'Bajo', label: 'Bajo' }
+                                ]}
+                            />
+                        </div>
+
+                        <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg">
+                            <span className="text-sm text-slate-600">Volatilidad Precio Chips</span>
+                            <Switch
+                                checked={marketData.chipsVolatility}
+                                onChange={(val) => handleMarketChange('chipsVolatility', val)}
+                                label={marketData.chipsVolatility ? 'Alta' : 'Baja'}
+                                activeColor="bg-red-500"
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Precio Mercado Finger Joint</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2 text-slate-400">$</span>
+                                <input
+                                    type="number"
+                                    className="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-4 py-2 text-sm focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none"
+                                    value={marketData.fingerJointPrice}
+                                    onChange={(e) => handleMarketChange('fingerJointPrice', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Costo Flete Promedio</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2 text-slate-400">$</span>
+                                <input
+                                    type="number"
+                                    className="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-4 py-2 text-sm focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none"
+                                    value={marketData.freightCost}
+                                    onChange={(e) => handleMarketChange('freightCost', e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
-
-                    {/* Chart (Mock) */}
-                    <Card title="Índice General de Biomasa (30 días)" className="bg-white border-slate-200">
-                        {/* Override title color since Card uses white text by default for dark theme, but here we want light theme card */}
-                        {/* Actually, let's just use a custom div to match the design exactly which is white background */}
-                        <div className="flex items-end gap-2 h-32 mt-4 px-4">
-                            {[40, 45, 42, 50, 48, 55, 60, 58, 65, 70, 68, 75].map((h, i) => (
-                                <div key={i} className="flex-1 bg-slate-100 rounded-t-sm hover:bg-accent-100 transition-colors relative group" style={{ height: `${h}%` }}>
-                                    {i === 11 && <div className="absolute inset-0 bg-accent-600/80 rounded-t-sm"></div>}
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
                 </div>
 
-                {/* Right Column: Update Form */}
-                <div>
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 sticky top-6">
-                        <div className="flex items-center mb-6">
-                            <div className="p-2 bg-accent-50 rounded-lg mr-3">
-                                <PencilSquareIcon className="w-5 h-5 text-accent-600" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-800">Actualizar Valor</h3>
-                                <p className="text-xs text-slate-500">Modificar cotización actual</p>
-                            </div>
+                {/* Sección B: Demandas Locales */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                            <TruckIcon className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-bold text-slate-800">Demandas Locales</h3>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-slate-700">Demanda Sustrato/Viveros</span>
+                            <Switch
+                                checked={demands.sustrato}
+                                onChange={(val) => handleDemandChange('sustrato', val)}
+                                label={demands.sustrato ? 'Alta' : 'Baja'}
+                            />
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-slate-700">Demanda Compost</span>
+                            <Switch
+                                checked={demands.compost}
+                                onChange={(val) => handleDemandChange('compost', val)}
+                                label={demands.compost ? 'Alta' : 'Baja'}
+                            />
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-slate-700">Demanda Pellets</span>
+                            <Switch
+                                checked={demands.pellets}
+                                onChange={(val) => handleDemandChange('pellets', val)}
+                                label={demands.pellets ? 'Alta' : 'Baja'}
+                            />
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-slate-700">Demanda Biomasa</span>
+                            <Switch
+                                checked={demands.biomasa}
+                                onChange={(val) => handleDemandChange('biomasa', val)}
+                                label={demands.biomasa ? 'Alta' : 'Baja'}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sección C: Estado de la Planta */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                        <div className="p-2 bg-orange-50 rounded-lg text-orange-600">
+                            <BuildingOfficeIcon className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-bold text-slate-800">Estado de la Planta</h3>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-slate-700">Estado de Caldera</span>
+                            <Switch
+                                checked={plantStatus.caldera}
+                                onChange={(val) => handlePlantChange('caldera', val)}
+                                label={plantStatus.caldera ? 'Encendida' : 'Apagada'}
+                            />
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-slate-500">Producto</label>
-                                <input type="text" value="Chips de Pino (Limpios)" readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700" />
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-slate-700">Stock Biomasa Actual</span>
+                            <Switch
+                                checked={plantStatus.stockBiomasa}
+                                onChange={(val) => handlePlantChange('stockBiomasa', val)}
+                                label={plantStatus.stockBiomasa ? 'Suficiente' : 'Crítico'}
+                                activeColor="bg-green-500"
+                                inactiveColor="bg-red-500"
+                            />
+                        </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-slate-500">Precio Actual ($)</label>
-                                <input type="text" value="18000" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 font-bold focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none" />
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <label className="text-sm font-medium text-slate-700">Capacidad Almac. Pellets</label>
+                                <span className="text-sm font-bold text-slate-600">{plantStatus.almacenamientoPellets}%</span>
                             </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent-600"
+                                value={plantStatus.almacenamientoPellets}
+                                onChange={(e) => handlePlantChange('almacenamientoPellets', e.target.value)}
+                            />
+                        </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-slate-500">Tendencia Observada</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['Sube', 'Igual', 'Baja'].map((t) => (
-                                        <button key={t} className={`py-2 rounded-lg text-xs font-medium border ${t === 'Igual' ? 'bg-slate-100 border-slate-300 text-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <Button className="w-full justify-center mt-4">Guardar Cambios</Button>
-
-                            <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg flex gap-2">
-                                <ExclamationTriangleIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                                <p className="text-[10px] text-amber-700 leading-tight">
-                                    Nota: Los cambios impactarán directamente en el cálculo de rentabilidad del Sistema Experto.
-                                </p>
-                            </div>
+                        <div className="flex justify-between items-center pt-2">
+                            <span className="text-sm font-medium text-slate-700">Espacio Compostaje</span>
+                            <Switch
+                                checked={plantStatus.espacioCompostaje}
+                                onChange={(val) => handlePlantChange('espacioCompostaje', val)}
+                                label={plantStatus.espacioCompostaje ? 'Disponible' : 'Limitado'}
+                                inactiveColor="bg-amber-400"
+                            />
                         </div>
                     </div>
                 </div>

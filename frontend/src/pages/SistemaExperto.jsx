@@ -18,6 +18,10 @@ import {
 
 const SistemaExperto = () => {
     const [showResult, setShowResult] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [resultData, setResultData] = useState(null);
+
     const [formData, setFormData] = useState({
         category: 'Corteza',
         species: 'Pino',
@@ -28,28 +32,6 @@ const SistemaExperto = () => {
         defectType: 'Curvatura Leve',
         hasBark: false
     });
-
-    // Mock Result Data
-    const mockResult = {
-        recommendation: "PRODUCIR PELLETS",
-        type: "gain", // gain = green, cost = orange
-        justification: "Se detectó una oportunidad de alto valor agregado. El lote cumple con la humedad técnica requerida (no gasta energía en secado) y existe una demanda de mercado activa que garantiza la venta.",
-        rules: [
-            { id: "R06", name: "Factibilidad Industrial", desc: "Volumen > 200tn" },
-            { id: "R07", name: "Factibilidad Técnica", desc: "Humedad < 10%" },
-            { id: "R09", name: "Seguridad de Mercado", desc: "Precio Alto + Volatilidad Baja" }
-        ],
-        market: {
-            price: "ALTO",
-            demand: "ALTA",
-            volatility: "BAJA"
-        },
-        actions: [
-            "Derivar tolva a la Pelletizadora A.",
-            "Registrar lote en stock de productos terminados.",
-            "Etiquetar lote como Calidad Premium."
-        ]
-    };
 
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -62,10 +44,74 @@ const SistemaExperto = () => {
         }));
     };
 
-    const handleAnalyze = () => {
-        // In a real app, this would call the backend
-        setShowResult(true);
-        window.scrollTo(0, 0);
+    const handleAnalyze = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            // 1. Get Market Data from LocalStorage
+            const marketData = JSON.parse(localStorage.getItem('marketData') || '{}');
+
+            // 2. Prepare Payload
+            const payload = {
+                lot: formData,
+                market: marketData
+            };
+
+            // 3. Call API
+            // Note: In a real environment, use an environment variable for the API URL
+            const response = await fetch('http://localhost:8000/api/subproductos/analyze/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error del servidor (${response.status}): ${errorText}`);
+            }
+
+            const data = await response.json();
+
+            // 4. Process Results
+            if (data.success && data.recommendations.length > 0) {
+                // Find the optimal recommendation (or the first one)
+                const optimal = data.recommendations.find(r => r.type === 'optimal') || data.recommendations[0];
+
+                setResultData({
+                    recommendation: optimal.value.replace(/_/g, ' ').toUpperCase(), // Format: PRODUCIR_PELLETS -> PRODUCIR PELLETS
+                    type: optimal.type === 'optimal' ? 'gain' : 'cost',
+                    justification: "Análisis basado en las reglas de negocio activas.", // Static for now, could be dynamic
+                    rules: data.recommendations.map(r => ({
+                        id: r.type.toUpperCase(),
+                        name: r.desc,
+                        desc: r.value
+                    })),
+                    market: {
+                        price: marketData.precioPellets || 'N/A',
+                        demand: marketData.demandaPellets ? 'Alta' : 'Baja',
+                        volatility: marketData.volatilidadPellets ? 'Alta' : 'Baja'
+                    },
+                    actions: [
+                        "Verificar condiciones operativas.",
+                        "Registrar lote en el sistema.",
+                        "Ejecutar recomendación."
+                    ]
+                });
+                setShowResult(true);
+                window.scrollTo(0, 0);
+            } else {
+                setError("No se encontró una recomendación clara para este caso.");
+            }
+
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Error de conexión: Asegúrese de que el backend esté corriendo.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderDynamicFields = () => {
@@ -153,7 +199,7 @@ const SistemaExperto = () => {
         }
     };
 
-    if (showResult) {
+    if (showResult && resultData) {
         return (
             <div className="space-y-6 animate-fadeIn">
                 <div className="flex items-center gap-4">
@@ -180,7 +226,7 @@ const SistemaExperto = () => {
                                     </span>
                                 </div>
                                 <h1 className="text-4xl font-black text-slate-800 mb-4 tracking-tight">
-                                    {mockResult.recommendation}
+                                    {resultData.recommendation}
                                 </h1>
                                 <div className="flex items-center gap-2 text-green-600 font-medium">
                                     <CheckCircleIcon className="w-6 h-6" />
@@ -195,7 +241,7 @@ const SistemaExperto = () => {
                             <div className="space-y-6">
                                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                     <p className="text-slate-700 leading-relaxed italic">
-                                        "{mockResult.justification}"
+                                        "{resultData.justification}"
                                     </p>
                                 </div>
 
@@ -205,8 +251,8 @@ const SistemaExperto = () => {
                                         Reglas Clave Activadas
                                     </h4>
                                     <div className="space-y-2">
-                                        {mockResult.rules.map((rule) => (
-                                            <div key={rule.id} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
+                                        {resultData.rules.map((rule, idx) => (
+                                            <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
                                                 <span className="px-2 py-1 bg-navy-100 text-navy-700 text-xs font-bold rounded">
                                                     {rule.id}
                                                 </span>
@@ -232,19 +278,19 @@ const SistemaExperto = () => {
                                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                                     <span className="text-sm text-slate-600">Precio Pellet</span>
                                     <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                        {mockResult.market.price}
+                                        {resultData.market.price}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                                     <span className="text-sm text-slate-600">Demanda Local</span>
                                     <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                        {mockResult.market.demand}
+                                        {resultData.market.demand}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                                     <span className="text-sm text-slate-600">Volatilidad</span>
                                     <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-                                        {mockResult.market.volatility}
+                                        {resultData.market.volatility}
                                     </span>
                                 </div>
                                 <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex gap-2">
@@ -263,7 +309,7 @@ const SistemaExperto = () => {
                                 Acciones Inmediatas
                             </h3>
                             <div className="space-y-4">
-                                {mockResult.actions.map((action, index) => (
+                                {resultData.actions.map((action, index) => (
                                     <div key={index} className="flex gap-3">
                                         <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent-500/20 text-accent-400 flex items-center justify-center text-xs font-bold border border-accent-500/30">
                                             {index + 1}
@@ -364,6 +410,12 @@ const SistemaExperto = () => {
                                 {renderDynamicFields()}
                             </div>
 
+                            {error && (
+                                <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+                                    {error}
+                                </div>
+                            )}
+
                             <div className="flex justify-end gap-4 pt-4">
                                 <Button variant="ghost" onClick={() => setFormData({
                                     category: 'Corteza', species: 'Pino', volume: '', humidity: 45,
@@ -372,7 +424,13 @@ const SistemaExperto = () => {
                                 })}>
                                     Limpiar
                                 </Button>
-                                <Button icon={SparklesIcon} onClick={handleAnalyze}>Analizar Lote</Button>
+                                <Button
+                                    icon={loading ? undefined : SparklesIcon}
+                                    onClick={handleAnalyze}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Analizando...' : 'Analizar Lote'}
+                                </Button>
                             </div>
                         </div>
                     </Card>

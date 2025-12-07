@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Temporada, DemandaMercado, Subproducto
+from .models import Temporada, DemandaMercado, Subproducto, AnalisisSubproducto
 
 class TemporadaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,4 +23,9 @@ class DemandaMercadoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DemandaMercado
+        fields = '__all__'
+
+class AnalisisSubproductoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnalisisSubproducto
         fields = '__all__'

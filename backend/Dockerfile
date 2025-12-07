@@ -1,13 +1,14 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.11-slim
+# Use an older Debian release (Bullseye) for better SWI-Prolog/PySWIP compatibility
+FROM python:3.10-slim-bullseye
 
 # Set the working directory
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    swi-prolog \
+    swi-prolog-nox \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Copy the requirements file
 COPY requirements.txt .

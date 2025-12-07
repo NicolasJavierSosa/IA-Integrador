@@ -1,265 +1,215 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import StatusBadge from '../components/ui/StatusBadge';
 import {
+    ClockIcon,
     MagnifyingGlassIcon,
     FunnelIcon,
-    ArrowDownTrayIcon,
-    EyeIcon,
-    XMarkIcon,
-    CheckCircleIcon,
-    ExclamationCircleIcon
+    ArrowPathIcon,
+    DocumentTextIcon,
+    ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 const Historial = () => {
-    const [selectedItem, setSelectedItem] = useState(null);
+    const [historyData, setHistoryData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedItem, setSelectedItem] = useState(null);
 
-    // Mock Data
-    const historyData = [
-        {
-            id: 'TRX-2024-089',
-            date: '2024-03-15 14:30',
-            operator: 'Juan Pérez',
-            material: 'Corteza - Pino',
-            volume: '250 Ton',
-            result: 'PRODUCIR PELLETS',
-            status: 'Completado',
-            details: {
-                humidity: '12%',
-                contamination: 'No',
-                marketPrice: 'Alto',
-                rules: ['R06: Volumen > 200', 'R07: Humedad < 15%']
-            }
-        },
-        {
-            id: 'TRX-2024-088',
-            date: '2024-03-15 11:15',
-            operator: 'Maria Garcia',
-            material: 'Aserrín - Eucalipto',
-            volume: '120 Ton',
-            result: 'VENTA DIRECTA',
-            status: 'Completado',
-            details: {
-                humidity: '45%',
-                contamination: 'No',
-                marketPrice: 'Medio',
-                rules: ['R02: Volumen < 150', 'R04: Demanda Alta']
-            }
-        },
-        {
-            id: 'TRX-2024-087',
-            date: '2024-03-14 16:45',
-            operator: 'Carlos Ruiz',
-            material: 'Chips - Mixto',
-            volume: '500 Ton',
-            result: 'SUMINISTRAR CALDERA',
-            status: 'Alerta',
-            details: {
-                humidity: '60%',
-                contamination: 'Sí',
-                marketPrice: 'Bajo',
-                rules: ['R01: Contaminación Detectada']
-            }
-        },
-        {
-            id: 'TRX-2024-086',
-            date: '2024-03-14 09:20',
-            operator: 'Juan Pérez',
-            material: 'Despuntes - Pino',
-            volume: '80 Ton',
-            result: 'CHIPEADO',
-            status: 'Completado',
-            details: {
-                humidity: '18%',
-                contamination: 'No',
-                marketPrice: 'Alto',
-                rules: ['R08: Dimensiones Irregulares']
-            }
-        },
-        {
-            id: 'TRX-2024-085',
-            date: '2024-03-13 15:10',
-            operator: 'Ana López',
-            material: 'Corteza - Pino',
-            volume: '300 Ton',
-            result: 'PRODUCIR PELLETS',
-            status: 'Completado',
-            details: {
-                humidity: '14%',
-                contamination: 'No',
-                marketPrice: 'Alto',
-                rules: ['R06: Volumen > 200', 'R07: Humedad < 15%']
-            }
+    const fetchHistory = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:8000/api/historial/');
+            if (!response.ok) throw new Error('Error al cargar historial');
+            const data = await response.json();
+            setHistoryData(data);
+        } catch (error) {
+            console.error("Error fetching history:", error);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    useEffect(() => {
+        fetchHistory();
+    }, []);
 
     const filteredData = historyData.filter(item =>
-        item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.operator.toLowerCase().includes(searchTerm.toLowerCase())
+        item.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.recomendacion_principal.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.especie.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('es-CL', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        }).format(date);
+    };
 
     return (
         <div className="space-y-6 animate-fadeIn">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Historial de Consultas</h2>
-                    <p className="text-slate-400">Registro completo de análisis realizados por el Sistema Experto.</p>
+                    <p className="text-slate-400">Registro de todas las recomendaciones generadas por el sistema.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="secondary" icon={ArrowDownTrayIcon}>Exportar</Button>
+                    <button
+                        onClick={fetchHistory}
+                        className="p-2 bg-navy-700 hover:bg-navy-600 text-slate-300 rounded-lg transition-colors"
+                        title="Actualizar"
+                    >
+                        <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
                 </div>
             </div>
 
-            <Card className="overflow-hidden">
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6 p-1">
-                    <div className="relative flex-1">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Buscar por ID, Material o Operador..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all"
-                        />
-                    </div>
-                    <Button variant="ghost" icon={FunnelIcon}>Filtros Avanzados</Button>
-                </div>
-
-                {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                <th className="p-4">ID Transacción</th>
-                                <th className="p-4">Fecha</th>
-                                <th className="p-4">Operador</th>
-                                <th className="p-4">Material</th>
-                                <th className="p-4">Resultado</th>
-                                <th className="p-4">Estado</th>
-                                <th className="p-4 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm divide-y divide-slate-50">
-                            {filteredData.map((item) => (
-                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="p-4 font-mono text-slate-600 font-medium">{item.id}</td>
-                                    <td className="p-4 text-slate-600">{item.date}</td>
-                                    <td className="p-4 text-slate-800 font-medium">{item.operator}</td>
-                                    <td className="p-4 text-slate-600">{item.material}</td>
-                                    <td className="p-4">
-                                        <span className="px-2 py-1 rounded bg-navy-50 text-navy-700 font-bold text-xs">
-                                            {item.result}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <StatusBadge
-                                            status={item.status}
-                                            type="badge"
-                                            color={item.status === 'Alerta' ? 'red' : 'green'}
-                                        />
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <button
-                                            onClick={() => setSelectedItem(item)}
-                                            className="text-accent-600 hover:text-accent-700 font-medium text-xs flex items-center justify-end gap-1 ml-auto"
-                                        >
-                                            <EyeIcon className="w-4 h-4" />
-                                            Ver Detalle
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredData.length === 0 && (
-                    <div className="text-center py-12 text-slate-400">
-                        No se encontraron resultados para su búsqueda.
-                    </div>
-                )}
-            </Card>
-
-            {/* Detail Modal */}
-            {selectedItem && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-scaleIn">
-                        <div className="bg-navy-800 p-4 flex justify-between items-center">
-                            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                                <CheckCircleIcon className="w-5 h-5 text-green-400" />
-                                Detalle de Transacción
-                            </h3>
-                            <button
-                                onClick={() => setSelectedItem(null)}
-                                className="text-slate-400 hover:text-white transition-colors"
-                            >
-                                <XMarkIcon className="w-6 h-6" />
-                            </button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* List / Table Section */}
+                <div className="lg:col-span-2 space-y-4">
+                    {/* Search Bar */}
+                    <div className="bg-navy-800 p-4 rounded-xl border border-navy-700 flex gap-4">
+                        <div className="relative flex-1">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por categoría, especie o recomendación..."
+                                className="w-full bg-navy-900 text-white pl-10 pr-4 py-2 rounded-lg border border-navy-600 focus:border-accent-500 focus:outline-none"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
+                        <button className="flex items-center gap-2 px-4 py-2 bg-navy-700 hover:bg-navy-600 text-slate-300 rounded-lg transition-colors">
+                            <FunnelIcon className="w-5 h-5" />
+                            <span className="hidden sm:inline">Filtros</span>
+                        </button>
+                    </div>
 
-                        <div className="p-6 space-y-6">
-                            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-                                <div>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">ID Referencia</p>
-                                    <p className="text-xl font-mono font-bold text-slate-800">{selectedItem.id}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Fecha</p>
-                                    <p className="text-sm font-bold text-slate-700">{selectedItem.date}</p>
-                                </div>
-                            </div>
+                    {/* Table */}
+                    <div className="bg-navy-800 rounded-xl border border-navy-700 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-navy-900/50 text-slate-400 text-xs uppercase tracking-wider">
+                                        <th className="p-4 font-semibold">Fecha</th>
+                                        <th className="p-4 font-semibold">Material</th>
+                                        <th className="p-4 font-semibold">Volumen</th>
+                                        <th className="p-4 font-semibold">Recomendación</th>
+                                        <th className="p-4 font-semibold text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-navy-700">
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan="5" className="p-8 text-center text-slate-500">
+                                                Cargando historial...
+                                            </td>
+                                        </tr>
+                                    ) : filteredData.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" className="p-8 text-center text-slate-500">
+                                                No se encontraron registros.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredData.map((item) => (
+                                            <tr
+                                                key={item.id}
+                                                className={`hover:bg-navy-700/50 transition-colors cursor-pointer ${selectedItem?.id === item.id ? 'bg-navy-700/80' : ''}`}
+                                                onClick={() => setSelectedItem(item)}
+                                            >
+                                                <td className="p-4 text-slate-300 text-sm whitespace-nowrap">
+                                                    <div className="flex items-center gap-2">
+                                                        <ClockIcon className="w-4 h-4 text-slate-500" />
+                                                        {formatDate(item.fecha)}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="font-medium text-white">{item.categoria}</div>
+                                                    <div className="text-xs text-slate-500">{item.especie}</div>
+                                                </td>
+                                                <td className="p-4 text-slate-300 text-sm">
+                                                    {item.volumen} Ton
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        {item.recomendacion_principal}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <button className="text-accent-400 hover:text-accent-300">
+                                                        <ChevronRightIcon className="w-5 h-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-slate-50 p-3 rounded-lg">
-                                    <p className="text-xs text-slate-500 mb-1">Material</p>
-                                    <p className="font-bold text-slate-800">{selectedItem.material}</p>
+                {/* Detail View (Side Panel) */}
+                <div className="lg:col-span-1">
+                    {selectedItem ? (
+                        <Card title="Detalle del Análisis" className="sticky top-6 animate-fadeIn">
+                            <div className="space-y-6">
+                                <div className="pb-4 border-b border-slate-100">
+                                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Recomendación Principal</p>
+                                    <h3 className="text-lg font-bold text-navy-900 leading-tight">
+                                        {selectedItem.recomendacion_principal}
+                                    </h3>
                                 </div>
-                                <div className="bg-slate-50 p-3 rounded-lg">
-                                    <p className="text-xs text-slate-500 mb-1">Volumen</p>
-                                    <p className="font-bold text-slate-800">{selectedItem.volume}</p>
-                                </div>
-                                <div className="bg-slate-50 p-3 rounded-lg">
-                                    <p className="text-xs text-slate-500 mb-1">Humedad</p>
-                                    <p className="font-bold text-slate-800">{selectedItem.details.humidity}</p>
-                                </div>
-                                <div className="bg-slate-50 p-3 rounded-lg">
-                                    <p className="text-xs text-slate-500 mb-1">Contaminación</p>
-                                    <p className={`font-bold ${selectedItem.details.contamination === 'Sí' ? 'text-red-600' : 'text-green-600'}`}>
-                                        {selectedItem.details.contamination}
-                                    </p>
-                                </div>
-                            </div>
 
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Reglas Aplicadas</p>
-                                <div className="space-y-2">
-                                    {selectedItem.details.rules.map((rule, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-2 rounded border border-slate-100">
-                                            <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                            {rule}
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Datos de Entrada</p>
+                                        <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-600">Categoría:</span>
+                                                <span className="font-medium text-slate-800">{selectedItem.categoria}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-600">Especie:</span>
+                                                <span className="font-medium text-slate-800">{selectedItem.especie}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-600">Humedad:</span>
+                                                <span className="font-medium text-slate-800">{selectedItem.datos_entrada?.lot?.humidity}%</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-600">Volumen:</span>
+                                                <span className="font-medium text-slate-800">{selectedItem.volumen} Ton</span>
+                                            </div>
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Reglas Activadas</p>
+                                        <div className="space-y-2">
+                                            {selectedItem.resultados?.map((res, idx) => (
+                                                <div key={idx} className="flex items-start gap-2 text-sm p-2 bg-white border border-slate-100 rounded">
+                                                    <DocumentTextIcon className="w-4 h-4 text-accent-500 mt-0.5 flex-shrink-0" />
+                                                    <span className="text-slate-700 leading-tight">
+                                                        {res.value?.replace(/_/g, ' ')}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div className="pt-4 border-t border-slate-100">
-                                <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Resultado Final</p>
-                                <div className="p-4 bg-green-50 border border-green-100 rounded-lg text-center">
-                                    <p className="text-lg font-black text-green-700">{selectedItem.result}</p>
-                                </div>
-                            </div>
+                        </Card>
+                    ) : (
+                        <div className="h-64 rounded-xl border-2 border-dashed border-navy-700 flex flex-col items-center justify-center text-slate-500 p-6 text-center">
+                            <DocumentTextIcon className="w-12 h-12 mb-3 opacity-50" />
+                            <p className="text-sm">Selecciona un registro de la tabla para ver el detalle completo.</p>
                         </div>
-
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <Button onClick={() => setSelectedItem(null)}>Cerrar</Button>
-                        </div>
-                    </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 };

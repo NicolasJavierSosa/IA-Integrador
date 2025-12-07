@@ -21,3 +21,21 @@ class Subproducto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class AnalisisSubproducto(models.Model):
+    fecha = models.DateTimeField(auto_now_add=True)
+    categoria = models.CharField(max_length=100)
+    especie = models.CharField(max_length=100)
+    volumen = models.FloatField(null=True, blank=True)
+    recomendacion_principal = models.CharField(max_length=255)
+    justificacion = models.TextField(blank=True)
+    
+    # Store complex data structures as JSON
+    datos_entrada = models.JSONField(default=dict) # Stores lot and market data
+    resultados = models.JSONField(default=list)    # Stores the full list of recommendations/rules
+
+    def __str__(self):
+        return f"Análisis {self.categoria} - {self.fecha.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['-fecha']

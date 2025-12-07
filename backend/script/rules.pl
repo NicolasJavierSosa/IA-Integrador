@@ -1,191 +1,208 @@
 % ==============================================================================
-% Sistema Experto para la Industria Maderera - Base de Conocimiento
+% Sistema Experto EcoWood - Base de Conocimiento (Prolog)
 % ==============================================================================
 
-% Definición de operadores para facilitar la lectura (opcional)
-:- op(800, fx, if).
-:- op(700, xfx, then).
-:- op(300, xfy, or).
-:- op(200, xfy, and).
+% 1. Definición de Predicados Dinámicos (Atributos del Sistema)
+% Estos predicados representan los hechos que cambiarán con cada consulta.
+:- dynamic tipo/1.
+:- dynamic demanda_sustrato/1.
+:- dynamic mercado_compost/1.
+
+% Instucciones para permitir predicados no contiguos (Agrupados por tema, no por predicado)
+:- discontiguous recomendar/1.
+:- discontiguous parcial/1.
+:- discontiguous prioridad/1.
+:- dynamic contaminacion/1.
+:- dynamic especie/1.
+:- dynamic demanda_compost/1.
+:- dynamic espacio_compost/1.
+:- dynamic demanda_jardineria/1.
+:- dynamic volumen/1.
+:- dynamic demanda_pellets/1.
+:- dynamic humedad/1.
+:- dynamic precio_pellet/1.
+:- dynamic volatilidad_pellet/1.
+:- dynamic capacidad_almacenamiento/1.
+:- dynamic largo/1.
+:- dynamic ancho/1.
+:- dynamic maq_chipeadora/1.
+:- dynamic falla/1.
+:- dynamic precio_chips/1.
+:- dynamic volatilidad_chips/1.
+:- dynamic corteza/1.
+:- dynamic demanda_biomasa/1.
+:- dynamic caldera/1.
+:- dynamic stock_biomasa/1.
+:- dynamic precio_finger/1.
+:- dynamic maq_finger/1.
+:- dynamic maq_reprocesadora/1.
+:- dynamic costo_flete/1.
+:- dynamic margen_ganancia/1.
 
 % ==============================================================================
-% Reglas para Sustrato para viveros
+% REGLAS DE NEGOCIO
 % ==============================================================================
 
-% REGLA 01 (Viabilidad sustrato para viveros por Demanda)
-regla(1,
-    (tipo_subproducto('Corteza'), demanda_sustrato_local('Alta')),
-    recomendacion_optima('Producir_Sustrato'),
-    0.75).
-% Justificación: La alta demanda local hace viable económicamente el sustrato de corteza.
+% --- Reglas para Sustrato y Corteza ---
 
-% REGLA 02 (Viabilidad Compost Corteza (Refinada))
-regla(2,
-    (tipo_subproducto('Corteza'), mercado_local_compost('Verdadero'), contaminacion_quimica('Ninguna')),
-    recomendacion_optima('Producir_Compostaje'),
-    0.80).
-% Justificación: Refina la REGLA 04, añadiendo la restricción de seguridad.
+% REGLA 01: Producción de Sustrato por alta demanda
+recomendar(producir_sustrato) :-
+    tipo(corteza),
+    demanda_sustrato(alta).
 
-% REGLA 03 (Compostaje de Corteza de Pino)
-regla(3,
-    (tipo_subproducto('Corteza'), especie('Pino'), demanda_compost_local('Alta')),
-    recomendacion_optima('Compostaje_o_Sustrato_Acidofilo'),
-    0.80).
-% Justificación: La corteza de pino es muy valorada para sustratos de jardinería por su acidez.
+% REGLA 02: Compostaje seguro (sin contaminación)
+recomendar(producir_compostaje) :-
+    tipo(corteza),
+    mercado_compost(verdadero),
+    contaminacion(ninguna).
 
-% REGLA 04 (Evaluación Compostaje Corteza)
-regla(4,
-    (tipo_subproducto('Corteza'), demanda_compost_local('Baja'), espacio_disponible_compostaje('Limitado')),
-    recomendacion_optima('No_Compostar_Almacenar_Temporalmente'),
-    0.70).
-% Justificación: Cuando el mercado y el espacio no justifican el compostaje.
+% REGLA 03: Compostaje específico para Pino (Acidófilo)
+recomendar(compostaje_o_sustrato_acidofilo) :-
+    tipo(corteza),
+    especie(pino),
+    demanda_compost(alta).
 
-% REGLA 05 (Valorización Corteza Pino)
-regla(5,
-    (tipo_subproducto('Corteza'), demanda_jardineria('Alta')),
-    recomendacion_optima('Sustrato_Jardineria'),
-    0.85).
-% Justificación: La corteza tiene buena acidez y estructura para sustratos ornamentales.
+% REGLA 04: Almacenamiento temporal por falta de condiciones
+recomendar(almacenar_temporalmente) :-
+    tipo(corteza),
+    demanda_compost(baja),
+    espacio_compost(limitado).
+
+% REGLA 05: Sustrato para jardinería
+recomendar(sustrato_jardineria) :-
+    tipo(corteza),
+    demanda_jardineria(alta).
+
+% --- Reglas para Aserrín y Pellets ---
+
+% REGLA 06: Viabilidad industrial para pellets (Volumen)
+parcial(apto_pelletizacion) :-
+    volumen(V), V >= 200,
+    tipo(aserrin),
+    demanda_pellets(alta).
+
+% REGLA 07: Viabilidad técnica para pellets (Humedad)
+% Nota: Se mantiene como cláusula separada para permitir múltiples caminos a 'apto_pelletizacion'
+parcial(apto_pelletizacion) :-
+    humedad(H), H =< 10,
+    tipo(aserrin).
+
+% REGLA 08: Venta directa de aserrín (Baja demanda de pellets)
+recomendar(vender_aserrin) :-
+    volumen(V), V >= 200,
+    tipo(aserrin),
+    demanda_pellets(baja).
+
+% REGLA 09: Bloqueo por riesgo financiero (Prioritaria)
+recomendar(vender_aserrin) :-
+    precio_pellet(P), P > 110,  % Umbral de precio alto
+    volatilidad_pellet(alta).
+
+% REGLA 10: Forzar venta por falta de stock (Regla de seguridad)
+recomendar(forzar_venta_inmediata) :-
+    parcial(apto_pelletizacion),
+    capacidad_almacenamiento(C), C < 10.
+
+% --- Reglas para Retazos ---
+
+% REGLA 11: Aptitud para tableros
+parcial(apto_venta_tableros) :-
+    (tipo(retazos) ; tipo(meollos)),
+    volumen(V), V >= 50.
+
+% REGLA 12: Prioridad por dimensiones grandes
+prioridad(finger_joint_o_moldura) :-
+    tipo(retazo),
+    largo(L), L > 60.
+
+% --- Reglas para Chips ---
+
+% REGLA 13: Producción de chips por maquinaria disponible
+parcial(producir_chips) :-
+    maq_chipeadora(si),
+    volumen(V), V >= 100.
+
+% REGLA 14: Descarte de madera con fallas graves
+parcial(apto_solo_chips) :-
+    tipo(madera_fallas),
+    (falla(grieta_profunda) ; falla(pudricion)).
+
+% REGLA 15: Asegurar venta por estabilidad de mercado
+prioridad(asegurar_venta_contrato) :-
+    precio_chips(P), P > 30, P < 90, % Rango medio estimado
+    volatilidad_chips(baja).
+
+% REGLA 16: Chip Pulpable (Limpio y de especie correcta)
+parcial(chip_pulpable) :-
+    tipo(chip),
+    corteza(no),
+    (especie(pino) ; especie(eucalipto)).
+
+% REGLA 17: Chip No Pulpable (Sucio)
+parcial(chip_no_pulpable) :-
+    tipo(chip),
+    corteza(si).
+
+% REGLA 18: Suministro a caldera (Chip sucio + Demanda)
+recomendar(suministro_caldera) :-
+    parcial(chip_no_pulpable),
+    demanda_biomasa(alta).
+
+% REGLA 19: Prioridad de abastecimiento energético
+prioridad(suministrar_chip_caldera) :-
+    caldera(encendida),
+    stock_biomasa(bajo).
+
+% --- Reglas Finger Joint y Logística ---
+
+% REGLA 20: Viabilidad económica Finger Joint
+recomendar(producir_finger_joint) :-
+    parcial(apto_finger_joint),
+    precio_finger(Pf),
+    precio_chips(Pc),
+    Pf > (Pc * 2.5),
+    maq_finger(si).
+
+% REGLA 21: Aptitud técnica Finger Joint
+parcial(apto_finger_joint) :-
+    (tipo(retazo) ; tipo(despunte)),
+    largo(L), L > 50,
+    ancho(A), A > 5,
+    humedad(H), H < 18,
+    (especie(pino) ; especie(eucalipto)).
+
+% REGLA 22: Recuperación de segunda calidad
+parcial(apto_segunda_calidad) :-
+    tipo(madera_fallas),
+    (falla(curvatura_leve) ; falla(nudo_estetico)),
+    maq_reprocesadora(si).
+
+% REGLA 23: Rectificación de fallas leves
+prioridad(rectificar_reprocesar) :-
+    tipo(madera_fallas),
+    falla(curvatura_leve).
+
+% REGLA 24: Viabilidad logística (Flete vs Margen)
+recomendar(vender_en_planta_descartar) :-
+    costo_flete(Cf),
+    margen_ganancia(Mg),
+    Cf >= Mg.
 
 % ==============================================================================
-% Reglas para Aserrín y pellets
+% SET DE PRUEBAS (Descomentar para verificar)
 % ==============================================================================
 
-% REGLA 06 (Viabilidad Pelletización Propia por Volumen y demanda)
-regla(6,
-    (volumen_ton(V), V >= 200, tipo_subproducto('Aserrin'), demanda_mercado_local_pellets('Alta')),
-    recomendacion_parcial('Apto_para_Pelletizacion_Propia'),
-    0.80).
-% Justificación: El volumen y la demanda es suficiente para justificar la línea de producción.
+% Caso de Prueba: Lote de Retazos de Pino apto para Finger Joint
+% ------------------------------------------------------------------------------
+% tipo(retazo).
+% largo(55).
+% ancho(6).
+% humedad(12).
+% especie(pino).
+% precio_finger(100).
+% precio_chips(30).
+% maq_finger(si).
 
-% REGLA 07 (Viabilidad Pelletización Propia por humedad y demanda)
-regla(7,
-    (humedad(H), H =< 10, tipo_subproducto('Aserrin'), demanda_mercado_local_pellets('Alta')),
-    recomendacion_parcial('Apto_para_Pelletizacion_Propia'),
-    0.80).
-% Justificación: La humedad y la demanda es suficiente para justificar la línea de producción.
-
-% REGLA 08 (Venta Aserrin)
-regla(8,
-    (volumen_ton(V), V >= 200, tipo_subproducto('Aserrin'), demanda_mercado_local_pellets('Baja')),
-    recomendacion_optima('Vender_Aserrin'),
-    0.70).
-% Justificación: Si no hay mercado para pellets, la venta de aserrín es la mejor alternativa.
-
-% REGLA 09 (Modificador por Volatilidad de Mercado - Riesgo)
-regla(9,
-    (precio_mercado_pellet('Alto'), volatilidad_precio_pellet_30dias('Alta')),
-    modificar_fc(recomendacion('Producir_Pellets'), 0.7),
-    1.0).
-% Justificación: El precio es alto, pero riesgoso.
-
-% REGLA 10 (Válvula de Escape)
-regla(10,
-    (recomendacion_parcial('Apto_Pellet'), capacidad_almacenamiento_pellet(C), C > 90),
-    recomendacion_optima('Vender_Pellet'),
-    0.85).
-% Justificación: No hay dónde guardar los pellets.
-
-% ==============================================================================
-% Reglas para residuos de tipo Retazos
-% ==============================================================================
-
-% REGLA 11 (Aptitud Venta para Tableros)
-regla(11,
-    ((tipo_subproducto('Retazos') ; tipo_subproducto('Meollos_Roletes')), volumen_anual_ton(V), V >= 50),
-    recomendacion_parcial('Apto_para_Venta_Tableros'),
-    0.75).
-% Justificación: Los recortes sólidos y roletes son materia prima directa para tableros.
-
-% REGLA 12 (Uso Preferente de Retazos Grandes)
-regla(12,
-    (tipo_subproducto('Retazo'), dimension_largo_promedio_cm(L), L > 60),
-    recomendacion_prioridad('Destinar_a_FingerJoint_o_Moldura'),
-    0.85).
-% Justificación: Prioriza material de mayor dimensión.
-
-% ==============================================================================
-% Reglas para Chips
-% ==============================================================================
-
-% REGLA 13 (Priorización Chips por Maquinaria Existente)
-regla(13,
-    (maquinaria_chipeadora_disponible('SI'), volumen_anual_ton(V), V >= 100),
-    recomendacion_parcial('Priorizar_Produccion_Chips'),
-    0.85).
-% Justificación: La maquinaria ya está disponible (costo hundido).
-
-% REGLA 14 (Descarte de Maderas Falladas)
-regla(14,
-    (tipo_subproducto('Madera_con_fallas'), (grado_falla('Grieta_profunda') ; grado_falla('Pudricion_parcial'))),
-    recomendacion_parcial('Apto_Solo_Chips'),
-    1.0).
-% Justificación: Falla estructural.
-
-% REGLA 15 (Modificador por Volatilidad de Mercado - Estabilidad)
-regla(15,
-    (precio_mercado_chips('Medio'), volatilidad_precio_chips_30dias('Baja')),
-    modificar_fc(recomendacion('Producir_Chips'), 1.1),
-    1.0).
-% Justificación: Un precio medio pero estable es más deseable.
-
-% REGLA 16 (Chip Pulpable)
-regla(16,
-    (tipo_subproducto('Chip'), contiene_corteza('No'), (especie('Pino') ; especie('Eucalipto'))),
-    recomendacion_parcial('Chip_Pulpable'),
-    0.90).
-% Justificación: Chips limpios de especies fibrosas son aptos para pasta celulósica.
-
-% REGLA 17 (Chip No Pulpable)
-regla(17,
-    (tipo_subproducto('Chip'), contiene_corteza('Si')),
-    recomendacion_parcial('Chip_No_Pulpable'),
-    0.95).
-% Justificación: La corteza impide su uso en celulosa.
-
-% REGLA 18 (Destino Prioritario de Chip No Pulpable)
-regla(18,
-    (recomendacion_parcial('Chip_No_Pulpable'), demanda_biomasa('Alta')),
-    recomendacion_optima('Suministro_a_Caldera'),
-    0.90).
-% Justificación: Los chips no pulpables pueden usarse directamente como combustible.
-
-% REGLA 19 (Demanda Diaria de Caldera)
-regla(19,
-    (caldera_encendida('Si'), demanda_termica_diaria_ton_chip(D), D >= 10),
-    recomendacion_prioridad('Suministrar_Chip_a_Caldera'),
-    1.0).
-% Justificación: La caldera en funcionamiento requiere aporte continuo.
-
-% ==============================================================================
-% Reglas para Finger Joint
-% ==============================================================================
-
-% REGLA 20 (Viabilidad Económica Finger-Joint)
-regla(20,
-    (recomendacion_parcial('Apto_para_Finger_Joint'), precio_mercado_finger_joint_m3(PF), precio_mercado_chips_ton(PC), PF > (PC * 2.5), maquinaria_finger_joint_disponible('SI')),
-    recomendacion_optima('Producir_Finger_Joint'),
-    0.85).
-% Justificación: Solo es rentable si su precio supera significativamente el de chips.
-
-% REGLA 21 (Potencial de Finger-Joint)
-regla(21,
-    ((tipo_subproducto('Retazo') ; tipo_subproducto('Despunte')), dimension_largo_promedio_cm(L), L > 50, dimension_ancho_promedio_cm(A), A > 5, humedad(H), H < 18, (especie('Pino') ; especie('Eucalipto'))),
-    recomendacion_parcial('Apto_para_Finger_Joint'),
-    0.90).
-% Justificación: Identifica material con dimensiones suficientes.
-
-% REGLA 22 (Recuperación de Maderas Falladas)
-regla(22,
-    (tipo_subproducto('Madera_con_fallas'), (grado_falla('Curvatura_leve') ; grado_falla('Nudo_estetico')), maquinaria_reprocesadora_disponible('SI')),
-    recomendacion_parcial('Apto_para_Segunda_Calidad'),
-    0.70).
-% Justificación: Madera recuperable.
-
-% REGLA 23 (Uso Alternativo por Falla Leve)
-regla(23,
-    (tipo_subproducto('Madera_con_falla'), grado_falla('Curvatura_leve')),
-    recomendacion_prioridad('Rectificar_y_Reprocesar'),
-    0.70).
-% Justificación: Evita descartar material recuperable.
-
+% Consulta esperada:
+% ?- recomendar(X).
+% X = producir_finger_joint.

@@ -42,7 +42,11 @@ export const Select = ({ label, options, value, onChange, className = '', ...pro
                 {...props}
             >
                 {options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+                    <option 
+                        key={opt.value} 
+                        value={opt.value} 
+                        style={{ backgroundColor: '#0B1120', color: '#F1F5F9' }}
+                    >
                         {opt.label}
                     </option>
                 ))}

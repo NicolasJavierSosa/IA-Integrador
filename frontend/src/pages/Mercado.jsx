@@ -46,8 +46,8 @@ const Mercado = () => {
                 {/* Section A: Precios y Economía */}
                 <Card title="Precios y Economía" icon={CurrencyDollarIcon}>
                     <div className="space-y-6">
-                        <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                            <h4 className="text-sm font-bold text-slate-700 mb-3">Mercado de Pellets</h4>
+                        <div className="p-4 bg-navy-700/50 rounded-lg border border-navy-600">
+                            <h4 className="text-sm font-bold text-slate-300 mb-3">Mercado de Pellets</h4>
                             <div className="space-y-4">
                                 <Select
                                     label="Precio Mercado Pellets"
@@ -60,7 +60,7 @@ const Mercado = () => {
                                     ]}
                                 />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-slate-600">Volatilidad Alta</span>
+                                    <span className="text-sm text-slate-400">Volatilidad Alta</span>
                                     <Switch
                                         checked={formData.volatilidadPellets}
                                         onChange={(val) => handleChange('volatilidadPellets', val)}
@@ -71,8 +71,8 @@ const Mercado = () => {
                             </div>
                         </div>
 
-                        <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                            <h4 className="text-sm font-bold text-slate-700 mb-3">Mercado de Chips</h4>
+                        <div className="p-4 bg-navy-700/50 rounded-lg border border-navy-600">
+                            <h4 className="text-sm font-bold text-slate-300 mb-3">Mercado de Chips</h4>
                             <div className="space-y-4">
                                 <Select
                                     label="Precio Mercado Chips"
@@ -85,7 +85,7 @@ const Mercado = () => {
                                     ]}
                                 />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-slate-600">Volatilidad Alta</span>
+                                    <span className="text-sm text-slate-400">Volatilidad Alta</span>
                                     <Switch
                                         checked={formData.volatilidadChips}
                                         onChange={(val) => handleChange('volatilidadChips', val)}
@@ -118,32 +118,32 @@ const Mercado = () => {
                 {/* Section B: Demandas Locales */}
                 <Card title="Demandas Locales" icon={TruckIcon}>
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                            <span className="text-sm font-medium text-slate-700">Demanda Sustrato/Viveros</span>
+                        <div className="flex justify-between items-center p-3 bg-navy-700/50 rounded-lg">
+                            <span className="text-sm font-medium text-slate-300">Demanda Sustrato/Viveros</span>
                             <Switch
                                 checked={formData.demandaSustrato}
                                 onChange={(val) => handleChange('demandaSustrato', val)}
                                 label={formData.demandaSustrato ? 'Alta' : 'Baja'}
                             />
                         </div>
-                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                            <span className="text-sm font-medium text-slate-700">Demanda Compost</span>
+                        <div className="flex justify-between items-center p-3 bg-navy-700/50 rounded-lg">
+                            <span className="text-sm font-medium text-slate-300">Demanda Compost</span>
                             <Switch
                                 checked={formData.demandaCompost}
                                 onChange={(val) => handleChange('demandaCompost', val)}
                                 label={formData.demandaCompost ? 'Alta' : 'Baja'}
                             />
                         </div>
-                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                            <span className="text-sm font-medium text-slate-700">Demanda Pellets</span>
+                        <div className="flex justify-between items-center p-3 bg-navy-700/50 rounded-lg">
+                            <span className="text-sm font-medium text-slate-300">Demanda Pellets</span>
                             <Switch
                                 checked={formData.demandaPellets}
                                 onChange={(val) => handleChange('demandaPellets', val)}
                                 label={formData.demandaPellets ? 'Alta' : 'Baja'}
                             />
                         </div>
-                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                            <span className="text-sm font-medium text-slate-700">Demanda Biomasa (Energía)</span>
+                        <div className="flex justify-between items-center p-3 bg-navy-700/50 rounded-lg">
+                            <span className="text-sm font-medium text-slate-300">Demanda Biomasa (Energía)</span>
                             <Switch
                                 checked={formData.demandaBiomasa}
                                 onChange={(val) => handleChange('demandaBiomasa', val)}
@@ -157,7 +157,7 @@ const Mercado = () => {
                 <Card title="Estado de la Planta" icon={FireIcon}>
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-slate-700">Estado de Caldera</span>
+                            <span className="text-sm font-medium text-slate-300">Estado de Caldera</span>
                             <Switch
                                 checked={formData.estadoCaldera}
                                 onChange={(val) => handleChange('estadoCaldera', val)}
@@ -167,7 +167,7 @@ const Mercado = () => {
                         </div>
 
                         <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-slate-700">Stock Biomasa Actual</span>
+                            <span className="text-sm font-medium text-slate-300">Stock Biomasa Actual</span>
                             <Switch
                                 checked={formData.stockBiomasa}
                                 onChange={(val) => handleChange('stockBiomasa', val)}
@@ -178,7 +178,7 @@ const Mercado = () => {
 
                         <div className="space-y-2">
                             <div className="flex justify-between">
-                                <label className="text-sm font-medium text-slate-700">Capacidad Almacenamiento Pellets</label>
+                                <label className="text-sm font-medium text-slate-300">Capacidad Almacenamiento Pellets</label>
                                 <span className="text-sm font-bold text-accent-600">{formData.capacidadAlmacenamiento}%</span>
                             </div>
                             <input
@@ -195,10 +195,10 @@ const Mercado = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                        <div className="flex justify-between items-center pt-4 border-t border-navy-700">
                             <div className="flex items-center gap-2">
-                                <ArchiveBoxIcon className="w-5 h-5 text-slate-500" />
-                                <span className="text-sm font-medium text-slate-700">Espacio Compostaje</span>
+                                <ArchiveBoxIcon className="w-5 h-5 text-slate-400" />
+                                <span className="text-sm font-medium text-slate-300">Espacio Compostaje</span>
                             </div>
                             <Switch
                                 checked={formData.espacioCompost}

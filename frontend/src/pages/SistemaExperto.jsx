@@ -119,11 +119,11 @@ const SistemaExperto = () => {
             case 'Corteza':
             case 'Corteza+Aserrín':
                 return (
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 animate-fadeIn">
+                    <div className="bg-navy-700/50 p-4 rounded-lg border border-navy-600 animate-fadeIn">
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                                <BeakerIcon className="w-5 h-5 text-slate-500" />
-                                <span className="text-sm font-medium text-slate-700">Contaminación Química</span>
+                                <BeakerIcon className="w-5 h-5 text-slate-400" />
+                                <span className="text-sm font-medium text-slate-300">Contaminación Química</span>
                             </div>
                             <Switch
                                 checked={formData.chemicalContamination}
@@ -132,7 +132,7 @@ const SistemaExperto = () => {
                                 activeColor="bg-red-500"
                             />
                         </div>
-                        <p className="text-xs text-slate-400 mt-2 ml-7">
+                        <p className="text-xs text-slate-500 mt-2 ml-7">
                             Indique si el material ha sido tratado con preservantes o pinturas.
                         </p>
                     </div>
@@ -141,8 +141,8 @@ const SistemaExperto = () => {
             case 'Retazos':
             case 'Despuntes':
                 return (
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 animate-fadeIn space-y-4">
-                        <h4 className="text-sm font-medium text-slate-700 mb-2">Dimensiones Promedio</h4>
+                    <div className="bg-navy-700/50 p-4 rounded-lg border border-navy-600 animate-fadeIn space-y-4">
+                        <h4 className="text-sm font-medium text-slate-300 mb-2">Dimensiones Promedio</h4>
                         <div className="grid grid-cols-2 gap-4">
                             <Input
                                 label="Largo (cm)"
@@ -164,7 +164,7 @@ const SistemaExperto = () => {
 
             case 'Madera con Fallas':
                 return (
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 animate-fadeIn">
+                    <div className="bg-navy-700/50 p-4 rounded-lg border border-navy-600 animate-fadeIn">
                         <Select
                             label="Tipo de Falla Predominante"
                             value={formData.defectType}
@@ -181,9 +181,9 @@ const SistemaExperto = () => {
 
             case 'Chips':
                 return (
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 animate-fadeIn">
+                    <div className="bg-navy-700/50 p-4 rounded-lg border border-navy-600 animate-fadeIn">
                         <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-slate-700">¿Contiene Corteza?</span>
+                            <span className="text-sm font-medium text-slate-300">¿Contiene Corteza?</span>
                             <Switch
                                 checked={formData.hasBark}
                                 onChange={(val) => handleChange('hasBark', val)}
@@ -218,48 +218,48 @@ const SistemaExperto = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Panel 1: Recomendación Principal */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white rounded-xl p-8 shadow-lg border-l-8 border-green-500 relative overflow-hidden">
+                        <div className="bg-navy-800 rounded-xl p-8 shadow-lg border-l-8 border-green-500 relative overflow-hidden">
                             <div className="relative z-10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                                    <span className="px-3 py-1 rounded-full bg-green-900/30 text-green-400 text-xs font-bold uppercase tracking-wider">
                                         Recomendación Óptima
                                     </span>
                                 </div>
-                                <h1 className="text-4xl font-black text-slate-800 mb-4 tracking-tight">
+                                <h1 className="text-4xl font-black text-white mb-4 tracking-tight">
                                     {resultData.recommendation}
                                 </h1>
-                                <div className="flex items-center gap-2 text-green-600 font-medium">
+                                <div className="flex items-center gap-2 text-green-400 font-medium">
                                     <CheckCircleIcon className="w-6 h-6" />
                                     <span>Opción de Alta Rentabilidad Identificada</span>
                                 </div>
                             </div>
-                            <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-green-50 to-transparent opacity-50"></div>
+                            <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-green-900/20 to-transparent opacity-50"></div>
                         </div>
 
                         {/* Panel 2: Justificación Lógica */}
                         <Card title="Lógica del Experto (El Por Qué)" icon={LightBulbIcon}>
                             <div className="space-y-6">
-                                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                    <p className="text-slate-700 leading-relaxed italic">
+                                <div className="bg-navy-900 p-4 rounded-lg border border-navy-700">
+                                    <p className="text-slate-300 leading-relaxed italic">
                                         "{resultData.justification}"
                                     </p>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                                         <ClipboardDocumentCheckIcon className="w-5 h-5 text-accent-600" />
                                         Reglas Clave Activadas
                                     </h4>
                                     <div className="space-y-2">
                                         {resultData.rules.map((rule, idx) => (
-                                            <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                                                <span className="px-2 py-1 bg-navy-100 text-navy-700 text-xs font-bold rounded">
+                                            <div key={idx} className="flex items-center gap-3 p-3 bg-navy-900 border border-navy-700 rounded-lg shadow-sm">
+                                                <span className="px-2 py-1 bg-navy-700 text-white text-xs font-bold rounded">
                                                     {rule.id}
                                                 </span>
                                                 <div className="flex-1">
-                                                    <span className="text-sm font-bold text-slate-700">{rule.name}</span>
+                                                    <span className="text-sm font-bold text-slate-300">{rule.name}</span>
                                                     <span className="text-sm text-slate-500 mx-2">|</span>
-                                                    <span className="text-sm text-slate-500">{rule.desc}</span>
+                                                    <span className="text-sm text-slate-400">{rule.desc}</span>
                                                 </div>
                                                 <CheckCircleIcon className="w-5 h-5 text-green-500" />
                                             </div>
@@ -275,27 +275,27 @@ const SistemaExperto = () => {
                         {/* Panel 3: Contexto de Mercado */}
                         <Card title="Factores Externos" icon={ChartBarIcon}>
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                    <span className="text-sm text-slate-600">Precio Pellet</span>
-                                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                <div className="flex justify-between items-center p-3 bg-navy-900 rounded-lg">
+                                    <span className="text-sm text-slate-400">Precio Pellet</span>
+                                    <span className="px-3 py-1 bg-green-900/30 text-green-400 text-xs font-bold rounded-full">
                                         {resultData.market.price}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                    <span className="text-sm text-slate-600">Demanda Local</span>
-                                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                <div className="flex justify-between items-center p-3 bg-navy-900 rounded-lg">
+                                    <span className="text-sm text-slate-400">Demanda Local</span>
+                                    <span className="px-3 py-1 bg-green-900/30 text-green-400 text-xs font-bold rounded-full">
                                         {resultData.market.demand}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                    <span className="text-sm text-slate-600">Volatilidad</span>
-                                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
+                                <div className="flex justify-between items-center p-3 bg-navy-900 rounded-lg">
+                                    <span className="text-sm text-slate-400">Volatilidad</span>
+                                    <span className="px-3 py-1 bg-blue-900/30 text-blue-400 text-xs font-bold rounded-full">
                                         {resultData.market.volatility}
                                     </span>
                                 </div>
-                                <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex gap-2">
-                                    <ExclamationTriangleIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                                    <p className="text-[10px] text-blue-700 leading-tight">
+                                <div className="mt-4 p-3 bg-blue-900/20 border border-blue-800 rounded-lg flex gap-2">
+                                    <ExclamationTriangleIcon className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                                    <p className="text-[10px] text-blue-300 leading-tight">
                                         El sistema validó que no existen riesgos financieros a corto plazo.
                                     </p>
                                 </div>
@@ -384,7 +384,7 @@ const SistemaExperto = () => {
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between">
-                                        <label className="text-sm font-medium text-slate-700">Humedad</label>
+                                        <label className="text-sm font-medium text-slate-300">Humedad</label>
                                         <span className="text-sm font-bold text-accent-600">{formData.humidity}%</span>
                                     </div>
                                     <input
@@ -393,7 +393,7 @@ const SistemaExperto = () => {
                                         max="100"
                                         value={formData.humidity}
                                         onChange={(e) => handleChange('humidity', e.target.value)}
-                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent-600"
+                                        className="w-full h-2 bg-navy-900 rounded-lg appearance-none cursor-pointer accent-accent-600"
                                     />
                                     <div className="flex justify-between text-[10px] text-slate-400">
                                         <span>Seco (0%)</span>
@@ -403,7 +403,7 @@ const SistemaExperto = () => {
                             </div>
 
                             {/* Dynamic Fields Section */}
-                            <div className="pt-4 border-t border-slate-100">
+                            <div className="pt-4 border-t border-navy-700">
                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
                                     Parámetros Específicos: {formData.category}
                                 </h3>
@@ -411,7 +411,7 @@ const SistemaExperto = () => {
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+                                <div className="p-3 bg-red-900/20 text-red-400 rounded-lg text-sm">
                                     {error}
                                 </div>
                             )}
@@ -438,26 +438,26 @@ const SistemaExperto = () => {
 
                 {/* Right Column: Recommendations (Static for now, but reactive to form in future) */}
                 <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg relative overflow-hidden">
+                    <div className="bg-navy-800 rounded-xl p-6 shadow-lg relative overflow-hidden">
                         <div className="relative z-10">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">RECOMENDACIÓN PRINCIPAL</p>
-                            <h3 className="text-xl font-bold text-slate-800 mb-4 pr-12">
+                            <h3 className="text-xl font-bold text-white mb-4 pr-12">
                                 {formData.category === 'Chips' ? 'Celulosa / Papel' :
                                     formData.category === 'Corteza' ? 'Combustible Caldera' :
                                         'Evaluando...'}
                             </h3>
 
                             <div className="flex items-center gap-3">
-                                <div className="h-2 flex-1 bg-slate-200 rounded-full overflow-hidden">
-                                    <div className="h-full bg-navy-800 w-3/4"></div>
+                                <div className="h-2 flex-1 bg-navy-900 rounded-full overflow-hidden">
+                                    <div className="h-full bg-accent-500 w-3/4"></div>
                                 </div>
-                                <span className="text-xs font-bold text-green-600">Alta Coincidencia</span>
+                                <span className="text-xs font-bold text-green-400">Alta Coincidencia</span>
                             </div>
                         </div>
-                        <TrophyIcon className="absolute top-4 right-4 w-16 h-16 text-slate-100" />
+                        <TrophyIcon className="absolute top-4 right-4 w-16 h-16 text-navy-700" />
                     </div>
 
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                    <div className="bg-amber-900/20 border border-amber-500/20 rounded-xl p-4">
                         <div className="flex items-start">
                             <ArrowTrendingUpIcon className="w-5 h-5 text-amber-500 mr-3 mt-0.5" />
                             <div>

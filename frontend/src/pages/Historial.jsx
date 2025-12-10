@@ -133,7 +133,7 @@ const Historial = () => {
                                                     {item.volumen} Ton
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400">
                                                         {item.recomendacion_principal}
                                                     </span>
                                                 </td>
@@ -156,9 +156,9 @@ const Historial = () => {
                     {selectedItem ? (
                         <Card title="Detalle del Análisis" className="sticky top-6 animate-fadeIn">
                             <div className="space-y-6">
-                                <div className="pb-4 border-b border-slate-100">
+                                <div className="pb-4 border-b border-navy-700">
                                     <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Recomendación Principal</p>
-                                    <h3 className="text-lg font-bold text-navy-900 leading-tight">
+                                    <h3 className="text-lg font-bold text-white leading-tight">
                                         {selectedItem.recomendacion_principal}
                                     </h3>
                                 </div>
@@ -166,22 +166,22 @@ const Historial = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Datos de Entrada</p>
-                                        <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
+                                        <div className="bg-navy-900 rounded-lg p-3 space-y-2 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-slate-600">Categoría:</span>
-                                                <span className="font-medium text-slate-800">{selectedItem.categoria}</span>
+                                                <span className="text-slate-400">Categoría:</span>
+                                                <span className="font-medium text-slate-200">{selectedItem.categoria}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-slate-600">Especie:</span>
-                                                <span className="font-medium text-slate-800">{selectedItem.especie}</span>
+                                                <span className="text-slate-400">Especie:</span>
+                                                <span className="font-medium text-slate-200">{selectedItem.especie}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-slate-600">Humedad:</span>
-                                                <span className="font-medium text-slate-800">{selectedItem.datos_entrada?.lot?.humidity}%</span>
+                                                <span className="text-slate-400">Humedad:</span>
+                                                <span className="font-medium text-slate-200">{selectedItem.datos_entrada?.lot?.humidity}%</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-slate-600">Volumen:</span>
-                                                <span className="font-medium text-slate-800">{selectedItem.volumen} Ton</span>
+                                                <span className="text-slate-400">Volumen:</span>
+                                                <span className="font-medium text-slate-200">{selectedItem.volumen} Ton</span>
                                             </div>
                                         </div>
                                     </div>
@@ -190,9 +190,9 @@ const Historial = () => {
                                         <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Reglas Activadas</p>
                                         <div className="space-y-2">
                                             {selectedItem.resultados?.map((res, idx) => (
-                                                <div key={idx} className="flex items-start gap-2 text-sm p-2 bg-white border border-slate-100 rounded">
+                                                <div key={idx} className="flex items-start gap-2 text-sm p-2 bg-navy-900 border border-navy-700 rounded">
                                                     <DocumentTextIcon className="w-4 h-4 text-accent-500 mt-0.5 flex-shrink-0" />
-                                                    <span className="text-slate-700 leading-tight">
+                                                    <span className="text-slate-300 leading-tight">
                                                         {res.value?.replace(/_/g, ' ')}
                                                     </span>
                                                 </div>

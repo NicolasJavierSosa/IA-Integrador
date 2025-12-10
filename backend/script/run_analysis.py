@@ -1,14 +1,25 @@
-
 import sys
 import json
 import os
 from pyswip import Prolog
+import unicodedata
 
 def safe_float(value, default=0.0):
     try:
         return float(value)
     except (ValueError, TypeError):
         return default
+
+def normalize_string(text):
+    """Remove accents and convert to lowercase with underscores"""
+    if not text:
+        return text
+    # Normalize unicode characters (NFD = decompose accents)
+    nfd = unicodedata.normalize('NFD', text)
+    # Filter out accent marks
+    without_accents = ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
+    # Convert to lowercase and replace spaces
+    return without_accents.lower().replace(' ', '_')
 
 def run_analysis(data):
     try:
@@ -33,7 +44,7 @@ def run_analysis(data):
         def assert_fact(predicate, value):
             if value is not None:
                 if isinstance(value, str):
-                    val = value.lower().replace(' ', '_')
+                    val = normalize_string(value)
                     prolog.assertz(f"{predicate}({val})")
                 else:
                     prolog.assertz(f"{predicate}({value})")
@@ -83,27 +94,49 @@ def run_analysis(data):
 
         # Query Rules
         recommendations = []
+        seen = set()  # Para evitar duplicados
         
-        for soln in prolog.query("recomendar(X)"):
-            recommendations.append({
-                "type": "optimal",
-                "value": soln["X"],
-                "desc": "Recomendación Óptima Identificada"
-            })
-            
-        for soln in prolog.query("prioridad(X)"):
-            recommendations.append({
-                "type": "priority",
-                "value": soln["X"],
-                "desc": "Acción Prioritaria"
-            })
-            
-        for soln in prolog.query("parcial(X)"):
-            recommendations.append({
-                "type": "partial",
-                "value": soln["X"],
-                "desc": "Viabilidad Parcial Detectada"
-            })
+        # Query for all recommendations (recomendar/1)
+        try:
+            for soln in prolog.query("recomendar(X)"):
+                rec_value = str(soln["X"])
+                if rec_value not in seen:
+                    recommendations.append({
+                        "type": "optimal",
+                        "value": rec_value,
+                        "desc": "Recomendación Óptima Identificada"
+                    })
+                    seen.add(rec_value)
+        except Exception as e:
+            print(f"Warning: Error querying recomendar: {e}", file=sys.stderr)
+        
+        # Query for priorities (prioridad/1)
+        try:
+            for soln in prolog.query("prioridad(X)"):
+                prio_value = str(soln["X"])
+                if prio_value not in seen:
+                    recommendations.append({
+                        "type": "priority",
+                        "value": prio_value,
+                        "desc": "Acción Prioritaria"
+                    })
+                    seen.add(prio_value)
+        except Exception as e:
+            print(f"Warning: Error querying prioridad: {e}", file=sys.stderr)
+        
+        # Query for partial viabilities (parcial/1)
+        try:
+            for soln in prolog.query("parcial(X)"):
+                parcial_value = str(soln["X"])
+                if parcial_value not in seen:
+                    recommendations.append({
+                        "type": "partial",
+                        "value": parcial_value,
+                        "desc": "Viabilidad Parcial Detectada"
+                    })
+                    seen.add(parcial_value)
+        except Exception as e:
+            print(f"Warning: Error querying parcial: {e}", file=sys.stderr)
             
         print(json.dumps({"success": True, "recommendations": recommendations}))
         

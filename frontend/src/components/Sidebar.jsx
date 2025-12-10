@@ -17,7 +17,7 @@ const Sidebar = () => {
         { name: 'Info de Mercado', href: '/mercado', icon: ChartBarIcon, section: 'PRINCIPAL' },
         { name: 'ABM Subproductos', href: '/subproductos', icon: CubeIcon, section: 'GESTIÓN' },
         { name: 'ABM Maquinarias', href: '/maquinarias', icon: WrenchScrewdriverIcon, section: 'GESTIÓN' },
-        { name: 'Sistema Experto', href: '/sistema-experto', icon: SparklesIcon, section: 'INTELIGENCIA' },
+        { name: 'Realizar una recomendacion', href: '/sistema-experto', icon: SparklesIcon, section: 'INTELIGENCIA' },
         { name: 'Historial Análisis', href: '/historial', icon: ClockIcon, section: 'INTELIGENCIA' },
     ];
 

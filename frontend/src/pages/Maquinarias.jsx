@@ -175,29 +175,29 @@ const Maquinarias = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {machines.map((machine) => (
-                        <div key={machine.id} className={`bg-white rounded-xl p-6 border-l-4 ${machine.disponible ? 'border-green-500' : 'border-red-500'} relative group`}>
+                        <div key={machine.id} className={`bg-navy-800 rounded-xl p-6 border-l-4 ${machine.disponible ? 'border-green-500' : 'border-red-500'} relative group`}>
                             <button
                                 onClick={() => handleDelete(machine.id)}
-                                className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                                 <TrashIcon className="w-4 h-4" />
                             </button>
 
                             <div className="flex justify-between items-start mb-4">
-                                <div className={`p-2 rounded-lg bg-slate-100 text-slate-600`}>
+                                <div className={`p-2 rounded-lg bg-navy-900 text-slate-300`}>
                                     {React.createElement(getIconForType(machine.tipo_maquinaria?.nombre), { className: "w-6 h-6" })}
                                 </div>
                                 <StatusBadge status={machine.disponible ? 'Operativa' : 'Mantenimiento'} type="dot" />
                             </div>
 
-                            <h3 className="font-bold text-slate-800 mb-1">{machine.nombre}</h3>
-                            <p className="text-xs text-slate-500 mb-6">{machine.tipo_maquinaria?.nombre || 'Sin Tipo'}</p>
+                            <h3 className="font-bold text-white mb-1">{machine.nombre}</h3>
+                            <p className="text-xs text-slate-400 mb-6">{machine.tipo_maquinaria?.nombre || 'Sin Tipo'}</p>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div className="flex items-center justify-between pt-4 border-t border-navy-700">
                                 <span className="text-xs font-medium text-slate-400">Estado:</span>
                                 <button
                                     onClick={(e) => handleToggleStatus(e, machine)}
-                                    className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none cursor-pointer z-10 ${machine.disponible ? 'bg-green-500' : 'bg-slate-300'}`}
+                                    className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none cursor-pointer z-10 ${machine.disponible ? 'bg-green-500' : 'bg-slate-600'}`}
                                     title={machine.disponible ? "Desactivar" : "Activar"}
                                 >
                                     <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${machine.disponible ? 'left-6' : 'left-1'}`}></div>

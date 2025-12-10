@@ -371,15 +371,15 @@ const SistemaExperto = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="relative">
+                                <div>
                                     <Input
                                         label="Volumen del Lote"
                                         placeholder="0.00"
                                         type="number"
                                         value={formData.volume}
                                         onChange={(e) => handleChange('volume', e.target.value)}
+                                        unit="Ton"
                                     />
-                                    <span className="absolute right-3 top-[38px] text-sm text-slate-400">Ton</span>
                                 </div>
 
                                 <div className="space-y-2">
@@ -393,7 +393,7 @@ const SistemaExperto = () => {
                                         max="100"
                                         value={formData.humidity}
                                         onChange={(e) => handleChange('humidity', e.target.value)}
-                                        className="w-full h-2 bg-navy-900 rounded-lg appearance-none cursor-pointer accent-accent-600"
+                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent-600"
                                     />
                                     <div className="flex justify-between text-[10px] text-slate-400">
                                         <span>Seco (0%)</span>

@@ -45,16 +45,19 @@
 
 % --- Reglas para Sustrato y Corteza ---
 
-% REGLA 01: Producción de Sustrato por alta demanda
+% REGLA 01: Producción de Sustrato por alta demanda (genérico, solo si no hay opción específica)
 recomendar(producir_sustrato) :-
     tipo(corteza),
-    demanda_sustrato(alta).
+    demanda_sustrato(alta),
+    % No activar si hay una recomendación más específica (R03 para Pino)
+    \+ (especie(pino), demanda_compost(alta)).
 
-% REGLA 02: Compostaje seguro (sin contaminación)
+% REGLA 02: Compostaje seguro (sin contaminación y con demanda)
 recomendar(producir_compostaje) :-
     tipo(corteza),
     mercado_compost(verdadero),
-    contaminacion(ninguna).
+    contaminacion(ninguna),
+    demanda_compost(alta).
 
 % REGLA 03: Compostaje específico para Pino (Acidófilo)
 recomendar(compostaje_o_sustrato_acidofilo) :-

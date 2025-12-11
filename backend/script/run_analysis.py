@@ -74,12 +74,25 @@ def run_analysis(data):
         assert_fact("demanda_jardineria", 'alta')
         
         assert_fact("demanda_pellets", 'alta' if market.get('demandaPellets') else 'baja')
-        assert_fact("precio_pellet", safe_float(market.get('precioPellets')))
+        
+        # Precios como texto cualitativo (Alto/Medio/Bajo) para comparaciones cualitativas
+        precio_pellet_texto = market.get('precioPellets', 'Medio')
+        precio_chips_texto = market.get('precioChips', 'Bajo')
+        
+        assert_fact("precio_pellet", precio_pellet_texto)
         assert_fact("volatilidad_pellet", 'alta' if market.get('volatilidadPellets') else 'baja')
         assert_fact("capacidad_almacenamiento", safe_float(market.get('capacidadAlmacenamiento')))
         
         assert_fact("maq_chipeadora", 'si')
-        assert_fact("precio_chips", safe_float(market.get('precioChips')))
+        
+        # Precio chips: enviar como texto para comparaciones cualitativas (R15, R17, etc.)
+        assert_fact("precio_chips", precio_chips_texto)
+        
+        # Precio chips numérico: para comparaciones matemáticas (R20)
+        # Mapeo cualitativo → numérico (valores promedio de mercado en $/ton)
+        precio_chips_numerico = {'Bajo': 30, 'Medio': 50, 'Alto': 70}.get(precio_chips_texto, 50)
+        assert_fact("precio_chips_num", precio_chips_numerico)
+        
         assert_fact("volatilidad_chips", 'alta' if market.get('volatilidadChips') else 'baja')
         assert_fact("demanda_biomasa", 'alta' if market.get('demandaBiomasa') else 'baja')
         

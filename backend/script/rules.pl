@@ -94,8 +94,10 @@ recomendar(vender_aserrin) :-
     demanda_pellets(baja).
 
 % REGLA 09: Bloqueo por riesgo financiero (Prioritaria)
+% Si el precio del pellet está alto y hay alta volatilidad, mejor vender el aserrín directamente
 recomendar(vender_aserrin) :-
-    precio_pellet(P), P > 110,  % Umbral de precio alto
+    tipo(aserrin),
+    precio_pellet(alto),
     volatilidad_pellet(alta).
 
 % REGLA 10: Forzar venta por falta de stock (Regla de seguridad)
@@ -105,22 +107,38 @@ recomendar(forzar_venta_inmediata) :-
 
 % --- Reglas para Retazos ---
 
-% REGLA 11: Aptitud para tableros
+% REGLA 11: Aptitud para tableros (solo si NO califica para finger joint)
 parcial(apto_venta_tableros) :-
     (tipo(retazos) ; tipo(meollos)),
-    volumen(V), V >= 50.
+    volumen(V), V >= 50,
+    % NO califica para finger joint si falla alguna condición
+    (
+        \+ (largo(L), L > 50) ;  % Largo insuficiente
+        \+ (ancho(A), A > 5) ;   % Ancho insuficiente
+        \+ (humedad(H), H < 18) ; % Humedad alta
+        \+ ((especie(pino) ; especie(eucalipto))) % Especie inadecuada
+    ).
 
-% REGLA 12: Prioridad por dimensiones grandes
+% REGLA 12: Prioridad por dimensiones grandes (solo si es económicamente viable)
 prioridad(finger_joint_o_moldura) :-
-    tipo(retazo),
-    largo(L), L > 60.
+    (tipo(retazos) ; tipo(despuntes)),
+    largo(L), L > 60,
+    % Validar viabilidad económica
+    precio_finger(Pf),
+    precio_chips_num(Pc),
+    Pf > (Pc * 2.5).
 
 % --- Reglas para Chips ---
 
-% REGLA 13: Producción de chips por maquinaria disponible
+% REGLA 13: Validación de volumen suficiente para procesamiento de chips
 parcial(producir_chips) :-
-    maq_chipeadora(si),
+    tipo(chips),
     volumen(V), V >= 100.
+
+% REGLA 13B: Volumen insuficiente de chips
+recomendar(no_procesar_chips) :-
+    tipo(chips),
+    volumen(V), V < 100.
 
 % REGLA 14: Descarte de madera con fallas graves
 parcial(apto_solo_chips) :-
@@ -128,30 +146,46 @@ parcial(apto_solo_chips) :-
     (falla(grieta_profunda) ; falla(pudricion)).
 
 % REGLA 15: Asegurar venta por estabilidad de mercado
+% Si el precio está en rango medio-alto y el mercado es estable, asegurar venta por contrato
 prioridad(asegurar_venta_contrato) :-
-    precio_chips(P), P > 30, P < 90, % Rango medio estimado
+    parcial(producir_chips),
+    (precio_chips(medio) ; precio_chips(alto)),
     volatilidad_chips(baja).
 
 % REGLA 16: Chip Pulpable (Limpio y de especie correcta)
 parcial(chip_pulpable) :-
-    tipo(chip),
+    parcial(producir_chips),
     corteza(no),
     (especie(pino) ; especie(eucalipto)).
 
 % REGLA 17: Chip No Pulpable (Sucio)
 parcial(chip_no_pulpable) :-
-    tipo(chip),
+    parcial(producir_chips),
     corteza(si).
 
-% REGLA 18: Suministro a caldera (Chip sucio + Demanda)
+% REGLA 18: Suministro a caldera (Chip sucio + Demanda alta + Stock bajo)
 recomendar(suministro_caldera) :-
     parcial(chip_no_pulpable),
-    demanda_biomasa(alta).
+    demanda_biomasa(alta),
+    stock_biomasa(bajo).
+
+% REGLA 18B: No suministrar si stock es suficiente
+recomendar(no_suministrar_caldera) :-
+    parcial(chip_no_pulpable),
+    stock_biomasa(suficiente).
 
 % REGLA 19: Prioridad de abastecimiento energético
+% Solo se activa si realmente hay necesidad urgente (caldera encendida + stock bajo)
+% Y si el chip es NO pulpable (con corteza) ya que el pulpable tiene mejor destino (venta)
 prioridad(suministrar_chip_caldera) :-
+    parcial(chip_no_pulpable),
     caldera(encendida),
     stock_biomasa(bajo).
+
+% REGLA 19B: Chip pulpable - mejor venderlo que usarlo en caldera
+recomendar(vender_chip_pulpable) :-
+    parcial(chip_pulpable),
+    stock_biomasa(suficiente).
 
 % --- Reglas Finger Joint y Logística ---
 
@@ -159,13 +193,13 @@ prioridad(suministrar_chip_caldera) :-
 recomendar(producir_finger_joint) :-
     parcial(apto_finger_joint),
     precio_finger(Pf),
-    precio_chips(Pc),
+    precio_chips_num(Pc),  % Usar precio numérico de chips
     Pf > (Pc * 2.5),
     maq_finger(si).
 
 % REGLA 21: Aptitud técnica Finger Joint
 parcial(apto_finger_joint) :-
-    (tipo(retazo) ; tipo(despunte)),
+    (tipo(retazos) ; tipo(despuntes)),
     largo(L), L > 50,
     ancho(A), A > 5,
     humedad(H), H < 18,

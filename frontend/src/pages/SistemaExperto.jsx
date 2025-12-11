@@ -184,6 +184,18 @@ const SistemaExperto = () => {
                                         </p>
                                     </div>
                                 )}
+                                {resultData.inputData.dimensions?.length && (
+                                    <div className="bg-navy-900 p-3 rounded-lg">
+                                        <p className="text-xs text-slate-500 mb-1">Largo</p>
+                                        <p className="text-sm font-bold text-white">{resultData.inputData.dimensions.length} cm</p>
+                                    </div>
+                                )}
+                                {resultData.inputData.dimensions?.width && (
+                                    <div className="bg-navy-900 p-3 rounded-lg">
+                                        <p className="text-xs text-slate-500 mb-1">Ancho</p>
+                                        <p className="text-sm font-bold text-white">{resultData.inputData.dimensions.width} cm</p>
+                                    </div>
+                                )}
                                 {resultData.inputData.defectType && (
                                     <div className="bg-navy-900 p-3 rounded-lg col-span-2">
                                         <p className="text-xs text-slate-500 mb-1">Tipo de Falla</p>
@@ -259,12 +271,21 @@ const SistemaExperto = () => {
                                     {resultData.market.volatility}
                                 </span>
                             </div>
-                            <div className="mt-4 p-3 bg-blue-900/20 border border-blue-800 rounded-lg flex gap-2">
-                                <ExclamationTriangleIcon className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                                <p className="text-[10px] text-blue-300 leading-tight">
-                                    El sistema validó que no existen riesgos financieros a corto plazo.
-                                </p>
-                            </div>
+                            {resultData.market.volatility === 'Alta' ? (
+                                <div className="mt-4 p-3 bg-red-900/20 border border-red-800 rounded-lg flex gap-2">
+                                    <ExclamationTriangleIcon className="w-4 h-4 text-red-400 flex-shrink-0" />
+                                    <p className="text-[10px] text-red-300 leading-tight">
+                                        ⚠️ Volatilidad alta detectada: existe riesgo financiero por inestabilidad del mercado.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="mt-4 p-3 bg-blue-900/20 border border-blue-800 rounded-lg flex gap-2">
+                                    <ExclamationTriangleIcon className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                                    <p className="text-[10px] text-blue-300 leading-tight">
+                                        ✓ El sistema validó que no existen riesgos financieros a corto plazo.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </Card>
 

@@ -283,8 +283,20 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertTrue(body2.get("success"))
 		# Sin chipeadora disponible NO debe sugerir chipear material
 		self.assertNotIn("chipear_material", self._values(body2))
-		# Y debería sugerir descartar
-		self.assertIn("descartar_material", self._values(body2))
+		# Sin chipeadora: si stock biomasa es crítico (stockBiomasa=False => stock_biomasa(bajo))
+		# debe recomendar suministro a caldera.
+		self.assertIn("suministro_caldera", self._values(body2))
+		self.assertNotIn("descartar_material", self._values(body2))
+
+		# Si stock biomasa es suficiente (stockBiomasa=True => stock_biomasa(suficiente))
+		# debe descartar.
+		payload["market"]["stockBiomasa"] = True
+		resp3 = self._post_analyze(payload)
+		self.assertEqual(resp3.status_code, 200)
+		body3 = resp3.json()
+		self.assertTrue(body3.get("success"))
+		self.assertIn("descartar_material", self._values(body3))
+		self.assertNotIn("suministro_caldera", self._values(body3))
 
 	def test_integration_reprocesadora_changes_second_quality_recommendation(self):
 		rep_type, _ = TipoMaquinaria.objects.get_or_create(

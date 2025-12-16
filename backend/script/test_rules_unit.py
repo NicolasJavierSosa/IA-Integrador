@@ -143,7 +143,7 @@ class PrologRulesUnitTests(unittest.TestCase):
         self.assertRecomendarContains("sustrato_jardineria")
 
     def test_R06_parcial_apto_pelletizacion_por_volumen_y_demanda(self):
-        self._announce("R06", "Aserrín + volumen>=200 + demanda pellets alta => parcial(apto_pelletizacion)")
+        self._announce("R06", "Aserrín + volumen>=20 + demanda pellets alta => parcial(apto_pelletizacion)")
         self.prolog.assertz("tipo(aserrin)")
         self.prolog.assertz("volumen(20)")
         self.prolog.assertz("demanda_pellets(alta)")
@@ -170,10 +170,10 @@ class PrologRulesUnitTests(unittest.TestCase):
         self.assertRecomendarContains("vender_aserrin")
 
     def test_R10_forzar_venta_inmediata_por_baja_capacidad(self):
-        self._announce("R10", "Parcial apto_pelletizacion + capacidad<10 => forzar_venta_inmediata")
+        self._announce("R10", "Parcial apto_pelletizacion + ocupación>=90% => forzar_venta_inmediata")
         self.prolog.assertz("tipo(aserrin)")
         self.prolog.assertz("humedad(9)")  # activa parcial(apto_pelletizacion)
-        self.prolog.assertz("capacidad_almacenamiento(5)")
+        self.prolog.assertz("capacidad_almacenamiento(95)")
         self.assertRecomendarContains("forzar_venta_inmediata")
 
     def test_R11_parcial_apto_venta_tableros(self):
@@ -227,11 +227,20 @@ class PrologRulesUnitTests(unittest.TestCase):
         self.assertRecomendarNotContains("chipear_material")
 
     def test_R14D_recomendar_descartar_material_si_no_hay_chipeadora(self):
-        self._announce("R14D", "Apto solo chips + maq_chipeadora=no => recomendar(descartar_material)")
+        self._announce("R14D", "Grieta/pudrición parcial + sin chipeadora + stock suficiente => descartar_material")
         self.prolog.assertz("tipo(madera_fallas)")
         self.prolog.assertz("falla(pudricion_parcial)")
         self.prolog.assertz("maq_chipeadora(no)")
+        self.prolog.assertz("stock_biomasa(suficiente)")
         self.assertRecomendarContains("descartar_material")
+
+    def test_R14D_recomendar_suministro_caldera_si_stock_critico_y_sin_chipeadora(self):
+        self._announce("R14D", "Grieta/pudrición parcial + sin chipeadora + stock crítico(bajo) => suministro_caldera")
+        self.prolog.assertz("tipo(madera_fallas)")
+        self.prolog.assertz("falla(grieta_profunda)")
+        self.prolog.assertz("maq_chipeadora(no)")
+        self.prolog.assertz("stock_biomasa(bajo)")
+        self.assertRecomendarContains("suministro_caldera")
 
     def test_R15_prioridad_asegurar_venta_contrato(self):
         self._announce("R15", "Producir chips + precio medio/alto + volatilidad baja => prioridad(asegurar_venta_contrato)")

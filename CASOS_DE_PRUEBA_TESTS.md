@@ -134,7 +134,7 @@ Este documento describe, en formato de “casos”, qué valida la suite de test
 - **Hechos de entrada:**
   - `tipo(aserrin)`
   - `humedad(9)` *(dispara `parcial(apto_pelletizacion)` vía R07)*
-  - `capacidad_almacenamiento(5)`
+  - `capacidad_almacenamiento(95)` *(ocupación alta = poco lugar para guardar)*
 - **Salida esperada:**
   - `recomendar(forzar_venta_inmediata)`
 

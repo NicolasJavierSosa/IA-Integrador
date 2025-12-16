@@ -145,7 +145,6 @@ const Subproductos = () => {
                 );
 
             case 'Retazos':
-            case 'Despuntes':
                 return (
                     <div className="bg-navy-700/50 p-4 rounded-lg border border-navy-600 animate-fadeIn space-y-4">
                         <h4 className="text-sm font-medium text-slate-300 mb-2">Dimensiones Promedio</h4>
@@ -226,8 +225,7 @@ const Subproductos = () => {
                                     options={[
                                         { value: 'Corteza', label: 'Corteza' },
                                         { value: 'Aserrín', label: 'Aserrín' },
-                                        { value: 'Retazos', label: 'Retazos / Meollos' },
-                                        { value: 'Despuntes', label: 'Despuntes' },
+                                        { value: 'Retazos', label: 'Retazos' },
                                         { value: 'Madera con Fallas', label: 'Madera con Fallas' },
                                         { value: 'Chips', label: 'Chips' },
                                         { value: 'Corteza+Aserrín', label: 'Corteza + Aserrín' }

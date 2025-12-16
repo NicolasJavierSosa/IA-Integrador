@@ -107,7 +107,8 @@ recomendar(vender_aserrin) :-
 % REGLA 10: Forzar venta por falta de stock (Regla de seguridad)
 recomendar(forzar_venta_inmediata) :-
     parcial(apto_pelletizacion),
-    capacidad_almacenamiento(C), C < 10.
+    % capacidad_almacenamiento es el % de ocupación (0-100). A mayor %, menos lugar.
+    capacidad_almacenamiento(C), C >= 90.
 
 % --- Reglas para Retazos ---
 
@@ -154,10 +155,20 @@ recomendar(chipear_material) :-
     parcial(apto_solo_chips),
     maq_chipeadora(si).
 
-% REGLA 14D: Si solo sirve para chips pero NO hay chipeadora disponible, descartar
+% REGLA 14D: Madera con fallas (grieta profunda / pudrición parcial) sin chipeadora.
+% Si el stock de biomasa es crítico (bajo) => suministrar a caldera.
+% Si el stock es suficiente => descartar.
+recomendar(suministro_caldera) :-
+    tipo(madera_fallas),
+    (falla(grieta_profunda) ; falla(pudricion_parcial)),
+    maq_chipeadora(no),
+    stock_biomasa(bajo).
+
 recomendar(descartar_material) :-
-    parcial(apto_solo_chips),
-    maq_chipeadora(no).
+    tipo(madera_fallas),
+    (falla(grieta_profunda) ; falla(pudricion_parcial)),
+    maq_chipeadora(no),
+    stock_biomasa(suficiente).
 
 % REGLA 15: Asegurar venta por estabilidad de mercado
 % Si el precio está en rango medio-alto y el mercado es estable, asegurar venta por contrato

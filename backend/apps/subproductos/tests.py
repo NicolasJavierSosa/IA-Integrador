@@ -285,3 +285,53 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertNotIn("chipear_material", self._values(body2))
 		# Y debería sugerir descartar
 		self.assertIn("descartar_material", self._values(body2))
+
+	def test_integration_reprocesadora_changes_second_quality_recommendation(self):
+		rep_type, _ = TipoMaquinaria.objects.get_or_create(
+			codigo="reprocesadora",
+			defaults={"nombre": "Reprocesadora", "descripcion": ""},
+		)
+		m = Maquinaria.objects.create(nombre="Cualquier nombre", tipo_maquinaria=rep_type, disponible=True)
+
+		payload = {
+			"lot": {
+				"category": "Madera con Fallas",
+				"species": "Pino",
+				"volume": 120,
+				"humidity": 15,
+				"chemicalContamination": False,
+				"dimensions": {"length": "", "width": ""},
+				"defectType": "Nudo Estético",
+				"hasBark": False,
+			},
+			"market": {
+				"demandaPellets": False,
+				"precioPellets": "Medio",
+				"volatilidadPellets": False,
+				"precioChips": "Medio",
+				"volatilidadChips": False,
+				"demandaBiomasa": False,
+				"estadoCaldera": False,
+				"stockBiomasa": False,
+				"costoFlete": 0,
+				"precioFinger": 200,
+				"capacidadAlmacenamiento": 50,
+				"demandaCompost": False,
+				"espacioCompost": False,
+				"demandaSustrato": False,
+			},
+		}
+
+		resp = self._post_analyze(payload)
+		self.assertEqual(resp.status_code, 200)
+		body = resp.json()
+		self.assertTrue(body.get("success"))
+		self.assertIn("producir_segunda_calidad", self._values(body))
+
+		m.disponible = False
+		m.save(update_fields=["disponible"])
+		resp2 = self._post_analyze(payload)
+		self.assertEqual(resp2.status_code, 200)
+		body2 = resp2.json()
+		self.assertTrue(body2.get("success"))
+		self.assertNotIn("producir_segunda_calidad", self._values(body2))

@@ -94,7 +94,7 @@ Este documento describe, en formato de “casos”, qué valida la suite de test
 - **Nombre del test:** `test_R06_parcial_apto_pelletizacion_por_volumen_y_demanda`
 - **Hechos de entrada:**
   - `tipo(aserrin)`
-  - `volumen(250)`
+  - `volumen(20)`
   - `demanda_pellets(alta)`
 - **Salida esperada:**
   - `parcial(apto_pelletizacion)`

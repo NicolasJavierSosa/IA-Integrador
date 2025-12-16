@@ -10,18 +10,47 @@ class PrologService:
         Executes the Prolog analysis in a separate process to prevent Segfaults.
         """
         try:
-            # Enrich engine input with machinery availability by *type* (stable code),
-            # not by user-assigned machine name.
-            available_type_codes = list(
-                Maquinaria.objects.filter(
-                    disponible=True,
-                    tipo_maquinaria__codigo__isnull=False,
-                )
-                .values_list('tipo_maquinaria__codigo', flat=True)
+            def _norm(s: str) -> str:
+                return (s or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+            def _canonical_type_code(codigo: str | None, nombre_tipo: str | None) -> str | None:
+                # Primary: stable codigo
+                code = _norm(codigo)
+                if code:
+                    return code
+
+                # Fallback (still type-based, not machine-name-based): map known type names
+                name = _norm(nombre_tipo)
+                if not name:
+                    return None
+                if "chipe" in name:
+                    return "chipeadora"
+                if "reproces" in name:
+                    return "reprocesadora"
+                if "finger" in name:
+                    return "finger_joint"
+                if "caldera" in name:
+                    return "caldera"
+                if "pellet" in name or "pelet" in name:
+                    return "pelletizadora"
+                if "descorte" in name:
+                    return "descortezadora"
+                return None
+
+            # Enrich engine input with machinery availability by *type*.
+            # IMPORTANT: Never rely on Maquinaria.nombre; only TipoMaquinaria (codigo/nombre).
+            available_type_codes: set[str] = set()
+            for codigo, nombre_tipo in (
+                Maquinaria.objects.filter(disponible=True)
+                .values_list("tipo_maquinaria__codigo", "tipo_maquinaria__nombre")
                 .distinct()
-            )
+            ):
+                canonical = _canonical_type_code(codigo, nombre_tipo)
+                if canonical:
+                    available_type_codes.add(canonical)
+
             engine_data = dict(data)
-            engine_data["machines"] = {"available_types": available_type_codes}
+            engine_data["machines"] = {"available_types": sorted(available_type_codes)}
 
             # Path to the script
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

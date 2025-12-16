@@ -81,7 +81,7 @@ recomendar(sustrato_jardineria) :-
 
 % REGLA 06: Viabilidad industrial para pellets (Volumen)
 parcial(apto_pelletizacion) :-
-    volumen(V), V >= 200,
+    volumen(V), V >= 20,
     tipo(aserrin),
     demanda_pellets(alta).
 
@@ -224,6 +224,10 @@ parcial(apto_segunda_calidad) :-
     tipo(madera_fallas),
     (falla(curvatura_leve) ; falla(nudo_estetico)),
     maq_reprocesadora(si).
+
+% REGLA 22B: Si es apto para segunda calidad, recomendar su producción
+recomendar(producir_segunda_calidad) :-
+    parcial(apto_segunda_calidad).
 
 % REGLA 23: Rectificación de fallas leves
 prioridad(rectificar_reprocesar) :-

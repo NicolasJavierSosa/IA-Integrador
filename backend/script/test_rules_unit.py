@@ -145,7 +145,7 @@ class PrologRulesUnitTests(unittest.TestCase):
     def test_R06_parcial_apto_pelletizacion_por_volumen_y_demanda(self):
         self._announce("R06", "Aserrín + volumen>=200 + demanda pellets alta => parcial(apto_pelletizacion)")
         self.prolog.assertz("tipo(aserrin)")
-        self.prolog.assertz("volumen(250)")
+        self.prolog.assertz("volumen(20)")
         self.prolog.assertz("demanda_pellets(alta)")
         self.assertParcialContains("apto_pelletizacion")
 
@@ -319,6 +319,20 @@ class PrologRulesUnitTests(unittest.TestCase):
         self.prolog.assertz("falla(nudo_estetico)")
         self.prolog.assertz("maq_reprocesadora(si)")
         self.assertParcialContains("apto_segunda_calidad")
+
+    def test_R22B_recomendar_producir_segunda_calidad_si_reprocesadora_disponible(self):
+        self._announce("R22B", "Apto segunda calidad + reprocesadora=si => recomendar(producir_segunda_calidad)")
+        self.prolog.assertz("tipo(madera_fallas)")
+        self.prolog.assertz("falla(nudo_estetico)")
+        self.prolog.assertz("maq_reprocesadora(si)")
+        self.assertRecomendarContains("producir_segunda_calidad")
+
+    def test_R22B_no_recomendar_producir_segunda_calidad_si_no_hay_reprocesadora(self):
+        self._announce("R22B", "Apto segunda calidad + reprocesadora=no => NO recomendar(producir_segunda_calidad)")
+        self.prolog.assertz("tipo(madera_fallas)")
+        self.prolog.assertz("falla(nudo_estetico)")
+        self.prolog.assertz("maq_reprocesadora(no)")
+        self.assertRecomendarNotContains("producir_segunda_calidad")
 
     def test_R23_prioridad_rectificar_reprocesar(self):
         self._announce("R23", "Madera fallas + curvatura_leve => prioridad(rectificar_reprocesar)")

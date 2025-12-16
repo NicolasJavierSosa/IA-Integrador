@@ -91,6 +91,7 @@ def run_analysis(data):
         
         assert_fact("precio_pellet", precio_pellet_texto)
         assert_fact("volatilidad_pellet", 'alta' if market.get('volatilidadPellets') else 'baja')
+        # capacidad_almacenamiento: % de ocupación (0-100). A mayor %, menos lugar.
         assert_fact("capacidad_almacenamiento", safe_float(market.get('capacidadAlmacenamiento')))
         
         assert_fact("maq_chipeadora", 'si' if has_machine('chipeadora') else 'no')
@@ -114,6 +115,7 @@ def run_analysis(data):
         assert_fact("precio_finger", safe_float(market.get('precioFinger')))
         assert_fact("maq_finger", 'si' if has_machine('finger_joint') else 'no')
         assert_fact("maq_reprocesadora", 'si' if has_machine('reprocesadora') else 'no')
+        assert_fact("maq_pelletizadora", 'si' if has_machine('pelletizadora') else 'no')
         assert_fact("costo_flete", safe_float(market.get('costoFlete')))
         assert_fact("margen_ganancia", 20.0)
 

@@ -27,20 +27,119 @@ const Subproductos = () => {
         hasBark: false
     });
 
+    const RETAZOS_LIMITS = {
+        length: { min: 10, max: 50 },
+        width: { min: 3, max: 10 },
+    };
+
     const handleChange = (field, value) => {
+        if (field === 'volume') {
+            if (value === '') {
+                setFormData(prev => ({ ...prev, volume: '' }));
+                return;
+            }
+
+            const numericValue = Number(value);
+            if (!Number.isNaN(numericValue) && numericValue < 0) {
+                setFormData(prev => ({ ...prev, volume: '0' }));
+                return;
+            }
+        }
+
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     const handleDimensionChange = (dim, value) => {
+        // Retazos: límites de UI (cm)
+        // - ancho: 3..10
+        // - largo: 10..50
+        if (value === '' || value === null || value === undefined) {
+            setFormData(prev => ({
+                ...prev,
+                dimensions: { ...prev.dimensions, [dim]: '' }
+            }));
+            return;
+        }
+
+        const numericValue = Number(value);
+        if (Number.isNaN(numericValue)) {
+            // Evitar estados intermedios inválidos (p.ej. "-", "e")
+            setFormData(prev => ({
+                ...prev,
+                dimensions: { ...prev.dimensions, [dim]: '' }
+            }));
+            return;
+        }
+
+        const limits = RETAZOS_LIMITS[dim];
+        if (limits) {
+            const clamped = Math.max(limits.min, Math.min(limits.max, numericValue));
+            setFormData(prev => ({
+                ...prev,
+                dimensions: { ...prev.dimensions, [dim]: String(clamped) }
+            }));
+            return;
+        }
+
         setFormData(prev => ({
             ...prev,
-            dimensions: { ...prev.dimensions, [dim]: value }
+            dimensions: { ...prev.dimensions, [dim]: String(numericValue) }
         }));
     };
 
+    const preventInvalidNumberKeys = (e) => {
+        // Evita negativos y notación científica en inputs number
+        if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+        }
+    };
+
     const handleAnalyze = async () => {
-        setLoading(true);
         setError(null);
+
+        if (formData.volume === '' || formData.volume === null || formData.volume === undefined) {
+            setError('El campo "Volumen del Lote" es obligatorio.');
+            return;
+        }
+
+        const volumeNumber = Number(formData.volume);
+        if (Number.isNaN(volumeNumber)) {
+            setError('El campo "Volumen del Lote" debe ser un número válido.');
+            return;
+        }
+
+        if (volumeNumber < 0) {
+            setError('El campo "Volumen del Lote" no puede ser negativo.');
+            return;
+        }
+
+        if (formData.category === 'Retazos') {
+            const rawLength = formData.dimensions?.length;
+            const rawWidth = formData.dimensions?.width;
+
+            if (rawLength === '' || rawWidth === '' || rawLength === null || rawWidth === null || rawLength === undefined || rawWidth === undefined) {
+                setError('Para Retazos, complete Largo y Ancho dentro de los límites.');
+                return;
+            }
+
+            const lengthNumber = Number(rawLength);
+            const widthNumber = Number(rawWidth);
+            if (Number.isNaN(lengthNumber) || Number.isNaN(widthNumber)) {
+                setError('Para Retazos, Largo y Ancho deben ser numéricos.');
+                return;
+            }
+
+            if (lengthNumber < RETAZOS_LIMITS.length.min || lengthNumber > RETAZOS_LIMITS.length.max) {
+                setError(`Para Retazos, Largo debe estar entre ${RETAZOS_LIMITS.length.min} y ${RETAZOS_LIMITS.length.max} cm.`);
+                return;
+            }
+            if (widthNumber < RETAZOS_LIMITS.width.min || widthNumber > RETAZOS_LIMITS.width.max) {
+                setError(`Para Retazos, Ancho debe estar entre ${RETAZOS_LIMITS.width.min} y ${RETAZOS_LIMITS.width.max} cm.`);
+                return;
+            }
+        }
+
+        setLoading(true);
 
         try {
             // 1. Get Market Data from LocalStorage
@@ -155,6 +254,10 @@ const Subproductos = () => {
                                 type="number"
                                 value={formData.dimensions.length}
                                 onChange={(e) => handleDimensionChange('length', e.target.value)}
+                                onKeyDown={preventInvalidNumberKeys}
+                                min="10"
+                                max="50"
+                                step="0.01"
                             />
                             <Input
                                 label="Ancho (cm)"
@@ -162,6 +265,10 @@ const Subproductos = () => {
                                 type="number"
                                 value={formData.dimensions.width}
                                 onChange={(e) => handleDimensionChange('width', e.target.value)}
+                                onKeyDown={preventInvalidNumberKeys}
+                                min="3"
+                                max="10"
+                                step="0.01"
                             />
                         </div>
                     </div>
@@ -251,6 +358,7 @@ const Subproductos = () => {
                                         type="number"
                                         value={formData.volume}
                                         onChange={(e) => handleChange('volume', e.target.value)}
+                                        min="0"
                                         unit="Ton"
                                     />
                                 </div>

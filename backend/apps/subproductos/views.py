@@ -23,6 +23,80 @@ class SubproductoViewSet(viewsets.ModelViewSet):
         try:
             # 1. Extract Data
             data = request.data
+
+            # 1.1 Validate minimal payload (defensive)
+            lot = data.get('lot', {}) if isinstance(data, dict) else {}
+            market = data.get('market', {}) if isinstance(data, dict) else {}
+
+            raw_volume = lot.get('volume', None)
+            if raw_volume in (None, ''):
+                return Response(
+                    {"success": False, "error": "El campo 'volume' (volumen del lote) es obligatorio."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                volume = float(raw_volume)
+            except (TypeError, ValueError):
+                return Response(
+                    {"success": False, "error": "El campo 'volume' debe ser numérico."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if volume < 0:
+                return Response(
+                    {"success": False, "error": "El campo 'volume' no puede ser negativo."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Validación específica Retazos: largo/ancho deben respetar límites
+            if lot.get("category") == "Retazos":
+                dims = lot.get("dimensions") or {}
+                raw_length = dims.get("length")
+                raw_width = dims.get("width")
+
+                if raw_length in (None, "") or raw_width in (None, ""):
+                    return Response(
+                        {"success": False, "error": "Para Retazos, 'length' y 'width' son obligatorios."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                try:
+                    length_val = float(raw_length)
+                    width_val = float(raw_width)
+                except (TypeError, ValueError):
+                    return Response(
+                        {"success": False, "error": "Para Retazos, 'length' y 'width' deben ser numéricos."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                if length_val < 10 or length_val > 50:
+                    return Response(
+                        {"success": False, "error": "Para Retazos, 'length' debe estar entre 10 y 50 cm."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if width_val < 3 or width_val > 10:
+                    return Response(
+                        {"success": False, "error": "Para Retazos, 'width' debe estar entre 3 y 10 cm."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            for cost_field in ("precioFinger", "costoFlete"):
+                raw_cost = market.get(cost_field, None)
+                if raw_cost in (None, ''):
+                    continue
+                try:
+                    cost_value = float(raw_cost)
+                except (TypeError, ValueError):
+                    return Response(
+                        {"success": False, "error": f"El campo '{cost_field}' debe ser numérico."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if cost_value < 0:
+                    return Response(
+                        {"success": False, "error": f"El campo '{cost_field}' no puede ser negativo."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             
             # 2. Delegate to Service (Process Isolation)
             result = prolog_service.analyze_data(data)

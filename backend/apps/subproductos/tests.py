@@ -21,7 +21,7 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 			"lot": {
 				"category": "Chips",
 				"species": "Pino",
-				"volume": 50,
+				"volume": 5,
 				"humidity": 20,
 				"chemicalContamination": False,
 				"dimensions": {"length": "", "width": ""},
@@ -55,25 +55,31 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertEqual(body.get("debug_facts"), payload)
 
 		# 2) Motor de inferencia responde algo coherente
-		self.assertIn("no_procesar_chips", self._values(body))
+		self.assertIn("descartar_chips", self._values(body))
 
 		# 3) Se guarda en historial
 		self.assertEqual(AnalisisSubproducto.objects.count(), 1)
 		item = AnalisisSubproducto.objects.first()
 		self.assertEqual(item.categoria, "Chips")
 		self.assertEqual(item.especie, "Pino")
-		self.assertEqual(float(item.volumen), 50.0)
+		self.assertEqual(float(item.volumen), 5.0)
 		self.assertEqual(item.datos_entrada, payload)
 		self.assertIsInstance(item.resultados, list)
 		self.assertGreater(len(item.resultados), 0)
 
 	def test_integration_aserrin_partial_apto_pelletizacion(self):
+		pel_type, _ = TipoMaquinaria.objects.get_or_create(
+			codigo="pelletizadora",
+			defaults={"nombre": "Peletizadora", "descripcion": ""},
+		)
+		Maquinaria.objects.create(nombre="Peletizadora 1", tipo_maquinaria=pel_type, disponible=True)
+
 		payload = {
 			"lot": {
 				"category": "Aserrín",
 				"species": "Pino",
-				"volume": 20,
-				"humidity": 9,
+				"volume": 10,
+				"humidity": 8,
 				"chemicalContamination": False,
 				"dimensions": {"length": "", "width": ""},
 				"defectType": "Curvatura Leve",
@@ -90,7 +96,7 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 				"stockBiomasa": False,
 				"costoFlete": 0,
 				"precioFinger": 200,
-				"capacidadAlmacenamiento": 50,
+				"capacidadAlmacenamiento": 80,
 				"demandaCompost": False,
 				"espacioCompost": False,
 				"demandaSustrato": False,
@@ -103,8 +109,182 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertTrue(body.get("success"))
 		self.assertEqual(body.get("debug_facts"), payload)
 
-		# Debe aparecer la viabilidad parcial de pelletización por humedad (R07)
+		# Debe aparecer la viabilidad parcial de pelletización (requiere pelletizadora y humedad < 9)
 		self.assertIn(("partial", "apto_pelletizacion"), self._types_and_values(body))
+		# Con capacidad <= 90% debe recomendar almacenar pellets
+		self.assertIn("almacenar_pellet", self._values(body))
+
+	def test_integration_aserrin_apto_pelletizacion_con_almacenamiento_lleno_forza_venta(self):
+		pel_type, _ = TipoMaquinaria.objects.get_or_create(
+			codigo="pelletizadora",
+			defaults={"nombre": "Peletizadora", "descripcion": ""},
+		)
+		Maquinaria.objects.create(nombre="Peletizadora 1", tipo_maquinaria=pel_type, disponible=True)
+
+		payload = {
+			"lot": {
+				"category": "Aserrín",
+				"species": "Pino",
+				"volume": 10,
+				"humidity": 8,
+				"chemicalContamination": False,
+				"dimensions": {"length": "", "width": ""},
+				"defectType": "Curvatura Leve",
+				"hasBark": False,
+			},
+			"market": {
+				"demandaPellets": True,
+				"precioPellets": "Medio",
+				"volatilidadPellets": False,
+				"precioChips": "Bajo",
+				"volatilidadChips": False,
+				"demandaBiomasa": False,
+				"estadoCaldera": False,
+				"stockBiomasa": True,
+				"costoFlete": 0,
+				"precioFinger": 200,
+				"capacidadAlmacenamiento": 95,
+				"demandaCompost": False,
+				"espacioCompost": False,
+				"demandaSustrato": False,
+			},
+		}
+
+		resp = self._post_analyze(payload)
+		self.assertEqual(resp.status_code, 200)
+		body = resp.json()
+		self.assertTrue(body.get("success"))
+		self.assertIn(("partial", "apto_pelletizacion"), self._types_and_values(body))
+		self.assertIn("forzar_venta_inmediata", self._values(body))
+
+	def test_integration_aserrin_volumen_menor_5_descartar(self):
+		payload = {
+			"lot": {
+				"category": "Aserrín",
+				"species": "Pino",
+				"volume": 4,
+				"humidity": 8,
+				"chemicalContamination": False,
+				"dimensions": {"length": "", "width": ""},
+				"defectType": "Curvatura Leve",
+				"hasBark": False,
+			},
+			"market": {
+				"demandaPellets": True,
+				"precioPellets": "Medio",
+				"volatilidadPellets": False,
+				"precioChips": "Bajo",
+				"volatilidadChips": False,
+				"demandaBiomasa": False,
+				"estadoCaldera": False,
+				"stockBiomasa": True,
+				"costoFlete": 0,
+				"precioFinger": 200,
+				"capacidadAlmacenamiento": 50,
+				"demandaCompost": False,
+				"espacioCompost": False,
+				"demandaSustrato": False,
+			},
+		}
+
+		resp = self._post_analyze(payload)
+		self.assertEqual(resp.status_code, 200)
+		body = resp.json()
+		self.assertTrue(body.get("success"))
+		self.assertIn("descartar_aserrin", self._values(body))
+		self.assertNotIn(("partial", "apto_pelletizacion"), self._types_and_values(body))
+
+	def test_integration_aserrin_sin_pelletizadora_demanda_define_venta_o_descartar(self):
+		payload = {
+			"lot": {
+				"category": "Aserrín",
+				"species": "Pino",
+				"volume": 20,
+				"humidity": 11,
+				"chemicalContamination": False,
+				"dimensions": {"length": "", "width": ""},
+				"defectType": "Curvatura Leve",
+				"hasBark": False,
+			},
+			"market": {
+				"demandaPellets": True,
+				"precioPellets": "Medio",
+				"volatilidadPellets": False,
+				"precioChips": "Bajo",
+				"volatilidadChips": False,
+				"demandaBiomasa": False,
+				"estadoCaldera": False,
+				"stockBiomasa": True,
+				"costoFlete": 0,
+				"precioFinger": 200,
+				"capacidadAlmacenamiento": 50,
+				"demandaCompost": False,
+				"espacioCompost": False,
+				"demandaSustrato": False,
+			},
+		}
+
+		resp = self._post_analyze(payload)
+		self.assertEqual(resp.status_code, 200)
+		body = resp.json()
+		self.assertTrue(body.get("success"))
+		self.assertIn("vender_aserrin", self._values(body))
+		# Sin pelletizadora no debería aparecer la viabilidad de pelletización
+		self.assertNotIn(("partial", "apto_pelletizacion"), self._types_and_values(body))
+
+		# Si la demanda de pellets es baja, descartar
+		payload["market"]["demandaPellets"] = False
+		resp2 = self._post_analyze(payload)
+		self.assertEqual(resp2.status_code, 200)
+		body2 = resp2.json()
+		self.assertTrue(body2.get("success"))
+		self.assertIn("descartar_aserrin", self._values(body2))
+
+	def test_integration_chips_stock_critico_prioriza_caldera(self):
+		payload = {
+			"lot": {
+				"category": "Chips",
+				"species": "Pino",
+				"volume": 20,
+				"humidity": 20,
+				"chemicalContamination": False,
+				"dimensions": {"length": "", "width": ""},
+				"defectType": "Curvatura Leve",
+				"hasBark": False,
+			},
+			"market": {
+				"demandaPellets": False,
+				"precioPellets": "Medio",
+				"volatilidadPellets": False,
+				"precioChips": "Medio",
+				"volatilidadChips": False,
+				"demandaBiomasa": True,
+				"estadoCaldera": True,
+				"stockBiomasa": False,  # crítico => stock_biomasa(bajo)
+				"costoFlete": 0,
+				"precioFinger": 200,
+				"capacidadAlmacenamiento": 50,
+				"demandaCompost": False,
+				"espacioCompost": False,
+				"demandaSustrato": False,
+			},
+		}
+
+		resp = self._post_analyze(payload)
+		self.assertEqual(resp.status_code, 200)
+		body = resp.json()
+		self.assertTrue(body.get("success"))
+		self.assertIn(("priority", "suministrar_chip_caldera"), self._types_and_values(body))
+		self.assertNotIn("vender_chips", self._values(body))
+
+		# Si el stock es suficiente, ya no debe priorizar caldera y sí permitir venta.
+		payload["market"]["stockBiomasa"] = True
+		resp2 = self._post_analyze(payload)
+		self.assertEqual(resp2.status_code, 200)
+		body2 = resp2.json()
+		self.assertTrue(body2.get("success"))
+		self.assertNotIn(("priority", "suministrar_chip_caldera"), self._types_and_values(body2))
+		self.assertIn("vender_chips", self._values(body2))
 
 	def test_integration_madera_fallas_pudricion_parcial_roundtrip(self):
 		payload = {
@@ -272,8 +452,8 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertEqual(resp.status_code, 200)
 		body = resp.json()
 		self.assertTrue(body.get("success"))
-		# Con chipeadora disponible debe sugerir chipear material
-		self.assertIn("chipear_material", self._values(body))
+		# Con chipeadora disponible debe recomendar producir chips
+		self.assertIn("producir_chips", self._values(body))
 
 		m.disponible = False
 		m.save(update_fields=["disponible"])
@@ -281,11 +461,11 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertEqual(resp2.status_code, 200)
 		body2 = resp2.json()
 		self.assertTrue(body2.get("success"))
-		# Sin chipeadora disponible NO debe sugerir chipear material
-		self.assertNotIn("chipear_material", self._values(body2))
+		# Sin chipeadora disponible NO debe recomendar producir chips
+		self.assertNotIn("producir_chips", self._values(body2))
 		# Sin chipeadora: si stock biomasa es crítico (stockBiomasa=False => stock_biomasa(bajo))
-		# debe recomendar suministro a caldera.
-		self.assertIn("suministro_caldera", self._values(body2))
+		# debe priorizar suministro a caldera.
+		self.assertIn("suministrar_caldera", self._values(body2))
 		self.assertNotIn("descartar_material", self._values(body2))
 
 		# Si stock biomasa es suficiente (stockBiomasa=True => stock_biomasa(suficiente))
@@ -296,7 +476,7 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		body3 = resp3.json()
 		self.assertTrue(body3.get("success"))
 		self.assertIn("descartar_material", self._values(body3))
-		self.assertNotIn("suministro_caldera", self._values(body3))
+		self.assertNotIn("suministrar_caldera", self._values(body3))
 
 	def test_integration_reprocesadora_changes_second_quality_recommendation(self):
 		rep_type, _ = TipoMaquinaria.objects.get_or_create(
@@ -338,7 +518,7 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertEqual(resp.status_code, 200)
 		body = resp.json()
 		self.assertTrue(body.get("success"))
-		self.assertIn("producir_segunda_calidad", self._values(body))
+		self.assertIn(("partial", "apto_segunda_calidad"), self._types_and_values(body))
 
 		m.disponible = False
 		m.save(update_fields=["disponible"])
@@ -346,4 +526,4 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertEqual(resp2.status_code, 200)
 		body2 = resp2.json()
 		self.assertTrue(body2.get("success"))
-		self.assertNotIn("producir_segunda_calidad", self._values(body2))
+		self.assertNotIn(("partial", "apto_segunda_calidad"), self._types_and_values(body2))

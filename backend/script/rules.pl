@@ -37,6 +37,7 @@
 :- dynamic precio_finger/1.
 :- dynamic maq_finger/1.
 :- dynamic maq_reprocesadora/1.
+:- dynamic maq_pelletizadora/1.
 :- dynamic costo_flete/1.
 :- dynamic margen_ganancia/1.
 
@@ -46,170 +47,161 @@
 
 % --- Reglas para Sustrato y Corteza ---
 
-% REGLA 01: Producción de Sustrato por alta demanda (genérico, solo si no hay opción específica)
+% REGLA 01: Producción de Sustrato por alta demanda
 recomendar(producir_sustrato) :-
     tipo(corteza),
-    demanda_sustrato(alta),
-    % No activar si hay una recomendación más específica (R03 para Pino)
-    \+ (especie(pino), demanda_compost(alta)).
+    demanda_sustrato(alta).
 
-% REGLA 02: Compostaje seguro (sin contaminación y con demanda)
+% REGLA 02: Compostaje seguro (sin contaminación)
 recomendar(producir_compostaje) :-
     tipo(corteza),
-    mercado_compost(verdadero),
-    contaminacion(ninguna),
-    demanda_compost(alta).
+    \+ demanda_sustrato(alta),
+    contaminacion(ninguna).
 
 % REGLA 03: Compostaje específico para Pino (Acidófilo)
 recomendar(compostaje_o_sustrato_acidofilo) :-
     tipo(corteza),
+    \+ demanda_sustrato(alta),
+    \+ contaminacion(ninguna),
     especie(pino),
     demanda_compost(alta).
 
 % REGLA 04: Almacenamiento temporal por falta de condiciones
 recomendar(almacenar_temporalmente) :-
     tipo(corteza),
+    \+ demanda_sustrato(alta),
+    \+ contaminacion(ninguna),
+    \+ (especie(pino), demanda_compost(alta)),
     demanda_compost(baja),
     espacio_compost(limitado).
 
 % REGLA 05: Sustrato para jardinería
 recomendar(sustrato_jardineria) :-
     tipo(corteza),
+    \+ demanda_sustrato(alta),
+    \+ contaminacion(ninguna),
+    \+ (especie(pino), demanda_compost(alta)),
+    \+ (demanda_compost(baja), espacio_compost(limitado)),
     demanda_jardineria(alta).
 
 % --- Reglas para Aserrín y Pellets ---
 
-% REGLA 06: Viabilidad industrial para pellets (Volumen)
+% REGLA 06: Descarte por volumen insuficiente
+recomendar(descartar_aserrin) :-
+    tipo(aserrin),
+    volumen(V), V < 5.
+
+% REGLA 07: Apto para pelletización solo si hay pelletizadora y humedad < 9%
 parcial(apto_pelletizacion) :-
-    volumen(V), V >= 20,
     tipo(aserrin),
-    demanda_pellets(alta).
+    volumen(V), V >= 5,
+    maq_pelletizadora(si),
+    humedad(H), H < 9.
 
-% REGLA 07: Viabilidad técnica para pellets (Humedad)
-% Nota: Se mantiene como cláusula separada para permitir múltiples caminos a 'apto_pelletizacion'
-parcial(apto_pelletizacion) :-
-    humedad(H), H =< 10,
-    tipo(aserrin).
-
-% REGLA 08: Venta directa de aserrín (Baja demanda de pellets)
-recomendar(vender_aserrin) :-
-    volumen(V), V >= 200,
-    tipo(aserrin),
-    demanda_pellets(baja).
-
-% REGLA 09: Bloqueo por riesgo financiero (Prioritaria)
-% Si el precio del pellet está alto y hay alta volatilidad, mejor vender el aserrín directamente
-recomendar(vender_aserrin) :-
-    tipo(aserrin),
-    precio_pellet(alto),
-    volatilidad_pellet(alta).
-
-% REGLA 10: Forzar venta por falta de stock (Regla de seguridad)
+% REGLA 10: Si está apto para pelletización y el almacenamiento de pellets está > 90% (muy lleno), forzar venta inmediata
 recomendar(forzar_venta_inmediata) :-
     parcial(apto_pelletizacion),
-    % capacidad_almacenamiento es el % de ocupación (0-100). A mayor %, menos lugar.
-    capacidad_almacenamiento(C), C >= 90.
+    capacidad_almacenamiento(C), C > 90.
+
+% Si está apto para pelletización y hay capacidad (<= 90%), almacenar pellets
+recomendar(almacenar_pellet) :-
+    parcial(apto_pelletizacion),
+    capacidad_almacenamiento(C), C =< 90.
+
+% Sin pelletizadora: decidir por demanda de pellets
+% Si demanda pellets es alta, vender aserrín
+recomendar(vender_aserrin) :-
+    tipo(aserrin),
+    volumen(V), V >= 5,
+    maq_pelletizadora(no),
+    demanda_pellets(alta).
+
+% Si demanda pellets es baja, descartar aserrín
+recomendar(descartar_aserrin) :-
+    tipo(aserrin),
+    volumen(V), V >= 5,
+    maq_pelletizadora(no),
+    demanda_pellets(baja).
 
 % --- Reglas para Retazos ---
 
-% REGLA 11: Aptitud para tableros (solo si NO califica para finger joint)
-parcial(apto_venta_tableros) :-
-    (tipo(retazos) ; tipo(meollos)),
-    volumen(V), V >= 50,
-    % NO califica para finger joint si falla alguna condición
-    (
-        \+ (largo(L), L > 50) ;  % Largo insuficiente
-        \+ (ancho(A), A > 5) ;   % Ancho insuficiente
-        \+ (humedad(H), H < 18) ; % Humedad alta
-        \+ ((especie(pino) ; especie(eucalipto))) % Especie inadecuada
-    ).
+% REGLA 11: Aptitud para tableros
+recomendar(apto_venta_tableros) :-
+    tipo(retazos),
+    volumen(V), V >= 50.
 
-% REGLA 12: Prioridad por dimensiones grandes (solo si es económicamente viable)
-prioridad(finger_joint_o_moldura) :-
-    (tipo(retazos) ; tipo(despuntes)),
-    largo(L), L > 60,
-    % Validar viabilidad económica
-    precio_finger(Pf),
-    precio_chips_num(Pc),
-    Pf > (Pc * 2.5).
+% REGLA 12: Candidato a Finger Joint por dimensiones grandes
+parcial(candidato_finger_joint) :-
+    tipo(retazos),
+    largo(L), L > 60.
 
 % --- Reglas para Chips ---
 
 % REGLA 13: Validación de volumen suficiente para procesamiento de chips
-parcial(producir_chips) :-
+% Nota: Para la rama CHIPS, el material ya está producido. Evitar salidas "producir_*".
+parcial(chips_volumen_suficiente) :-
     tipo(chips),
-    volumen(V), V >= 100.
+    volumen(V), V >= 10.
 
 % REGLA 13B: Volumen insuficiente de chips
-recomendar(no_procesar_chips) :-
+recomendar(descartar_chips) :-
     tipo(chips),
-    volumen(V), V < 100.
+    volumen(V), V < 10.
 
 % REGLA 14: Descarte de madera con fallas graves
 parcial(apto_solo_chips) :-
     tipo(madera_fallas),
     (falla(grieta_profunda) ; falla(pudricion) ; falla(pudricion_parcial)).
 
-% REGLA 14C: Si solo sirve para chips y hay chipeadora disponible, chipear material
-recomendar(chipear_material) :-
+% REGLA 14C: Si solo sirve para chips y hay chipeadora disponible, producir chips
+recomendar(producir_chips) :-
     parcial(apto_solo_chips),
     maq_chipeadora(si).
 
-% REGLA 14D: Madera con fallas (grieta profunda / pudrición parcial) sin chipeadora.
-% Si el stock de biomasa es crítico (bajo) => suministrar a caldera.
+% REGLA 14D: Madera con fallas graves sin chipeadora.
+% Si el stock de biomasa es crítico (bajo) => prioridad: suministrar a caldera.
 % Si el stock es suficiente => descartar.
-recomendar(suministro_caldera) :-
+prioridad(suministrar_caldera) :-
     tipo(madera_fallas),
-    (falla(grieta_profunda) ; falla(pudricion_parcial)),
+    (falla(grieta_profunda) ; falla(pudricion) ; falla(pudricion_parcial)),
     maq_chipeadora(no),
     stock_biomasa(bajo).
 
 recomendar(descartar_material) :-
     tipo(madera_fallas),
-    (falla(grieta_profunda) ; falla(pudricion_parcial)),
+    (falla(grieta_profunda) ; falla(pudricion) ; falla(pudricion_parcial)),
     maq_chipeadora(no),
     stock_biomasa(suficiente).
 
-% REGLA 15: Asegurar venta por estabilidad de mercado
+% REGLA 15: Asegurar venta por estabilidad de mercado (solo si NO hay urgencia energética)
 % Si el precio está en rango medio-alto y el mercado es estable, asegurar venta por contrato
 prioridad(asegurar_venta_contrato) :-
-    parcial(producir_chips),
+    parcial(chips_volumen_suficiente),
+    stock_biomasa(suficiente),
     (precio_chips(medio) ; precio_chips(alto)),
     volatilidad_chips(baja).
 
-% REGLA 16: Chip Pulpable (Limpio y de especie correcta)
-parcial(chip_pulpable) :-
-    parcial(producir_chips),
+% REGLA 16: Venta de chips pulpables (limpios y de especie correcta)
+recomendar(vender_chip_pulpable) :-
+    parcial(chips_volumen_suficiente),
+    stock_biomasa(suficiente),
     corteza(no),
     (especie(pino) ; especie(eucalipto)).
 
 % REGLA 17: Chip No Pulpable (Sucio)
 parcial(chip_no_pulpable) :-
-    parcial(producir_chips),
+    parcial(chips_volumen_suficiente),
     corteza(si).
 
-% REGLA 18: Suministro a caldera (Chip sucio + Demanda alta + Stock bajo)
-recomendar(suministro_caldera) :-
-    parcial(chip_no_pulpable),
-    demanda_biomasa(alta),
-    stock_biomasa(bajo).
-
-% REGLA 18B: No suministrar si stock es suficiente
-recomendar(no_suministrar_caldera) :-
-    parcial(chip_no_pulpable),
-    stock_biomasa(suficiente).
-
-% REGLA 19: Prioridad de abastecimiento energético
-% Solo se activa si realmente hay necesidad urgente (caldera encendida + stock bajo)
-% Y si el chip es NO pulpable (con corteza) ya que el pulpable tiene mejor destino (venta)
+% REGLA 19: Si stock biomasa está crítico, enviar chips a caldera.
+% (Bloquea decisiones de venta cuando hay urgencia energética)
 prioridad(suministrar_chip_caldera) :-
-    parcial(chip_no_pulpable),
-    caldera(encendida),
+    parcial(chips_volumen_suficiente),
     stock_biomasa(bajo).
 
-% REGLA 19B: Chip pulpable - mejor venderlo que usarlo en caldera
-recomendar(vender_chip_pulpable) :-
-    parcial(chip_pulpable),
+% Regla de venta genérica (si hay volumen suficiente y stock biomasa suficiente)
+recomendar(vender_chips) :-
+    parcial(chips_volumen_suficiente),
     stock_biomasa(suficiente).
 
 % --- Reglas Finger Joint y Logística ---
@@ -224,7 +216,7 @@ recomendar(producir_finger_joint) :-
 
 % REGLA 21: Aptitud técnica Finger Joint
 parcial(apto_finger_joint) :-
-    (tipo(retazos) ; tipo(despuntes)),
+    tipo(retazos),
     largo(L), L > 50,
     ancho(A), A > 5,
     humedad(H), H < 18,
@@ -235,15 +227,6 @@ parcial(apto_segunda_calidad) :-
     tipo(madera_fallas),
     (falla(curvatura_leve) ; falla(nudo_estetico)),
     maq_reprocesadora(si).
-
-% REGLA 22B: Si es apto para segunda calidad, recomendar su producción
-recomendar(producir_segunda_calidad) :-
-    parcial(apto_segunda_calidad).
-
-% REGLA 23: Rectificación de fallas leves
-prioridad(rectificar_reprocesar) :-
-    tipo(madera_fallas),
-    falla(curvatura_leve).
 
 % REGLA 24: Viabilidad logística (Flete vs Margen)
 recomendar(vender_en_planta_descartar) :-

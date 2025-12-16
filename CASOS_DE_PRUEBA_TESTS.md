@@ -176,7 +176,7 @@ Este documento describe, en formato de “casos”, qué valida la suite de test
 - **Nombre del test:** `test_R13B_no_procesar_chips`
 - **Hechos de entrada:**
   - `tipo(chips)`
-  - `volumen(50)`
+  - `volumen(5)`
 - **Salida esperada:**
   - `recomendar(no_procesar_chips)`
 

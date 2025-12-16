@@ -31,7 +31,21 @@ const Mercado = () => {
         localStorage.setItem('marketData', JSON.stringify(formData));
     }, [formData]);
 
+    const clampNonNegativeNumberString = (rawValue) => {
+        if (rawValue === '' || rawValue === null || rawValue === undefined) return '';
+
+        const n = Number(rawValue);
+        if (Number.isNaN(n)) return rawValue;
+        if (n < 0) return '0';
+        return rawValue;
+    };
+
     const handleChange = (field, value) => {
+        if (field === 'precioFinger' || field === 'costoFlete') {
+            setFormData(prev => ({ ...prev, [field]: clampNonNegativeNumberString(value) }));
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -103,6 +117,7 @@ const Mercado = () => {
                                 type="number"
                                 value={formData.precioFinger}
                                 onChange={(e) => handleChange('precioFinger', e.target.value)}
+                                min="0"
                             />
                             <Input
                                 label="Costo Flete Promedio"
@@ -110,6 +125,7 @@ const Mercado = () => {
                                 type="number"
                                 value={formData.costoFlete}
                                 onChange={(e) => handleChange('costoFlete', e.target.value)}
+                                min="0"
                             />
                         </div>
                     </div>

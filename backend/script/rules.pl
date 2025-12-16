@@ -28,6 +28,7 @@
 :- dynamic maq_chipeadora/1.
 :- dynamic falla/1.
 :- dynamic precio_chips/1.
+:- dynamic precio_chips_num/1.
 :- dynamic volatilidad_chips/1.
 :- dynamic corteza/1.
 :- dynamic demanda_biomasa/1.
@@ -136,17 +137,24 @@ prioridad(finger_joint_o_moldura) :-
 % REGLA 13: Validación de volumen suficiente para procesamiento de chips
 parcial(producir_chips) :-
     tipo(chips),
-    volumen(V), V >= 100.
+    volumen(V), V >= 100,
+    maq_chipeadora(si).
 
 % REGLA 13B: Volumen insuficiente de chips
 recomendar(no_procesar_chips) :-
     tipo(chips),
-    volumen(V), V < 100.
+    volumen(V), V < 100,
+    maq_chipeadora(si).
 
 % REGLA 14: Descarte de madera con fallas graves
 parcial(apto_solo_chips) :-
     tipo(madera_fallas),
-    (falla(grieta_profunda) ; falla(pudricion)).
+    (falla(grieta_profunda) ; falla(pudricion) ; falla(pudricion_parcial)).
+
+% REGLA 14C: Si solo sirve para chips y hay chipeadora disponible, chipear material
+recomendar(chipear_material) :-
+    parcial(apto_solo_chips),
+    maq_chipeadora(si).
 
 % REGLA 15: Asegurar venta por estabilidad de mercado
 % Si el precio está en rango medio-alto y el mercado es estable, asegurar venta por contrato

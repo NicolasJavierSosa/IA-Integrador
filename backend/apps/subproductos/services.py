@@ -1,10 +1,8 @@
 import os
-import threading
-import glob
-
 import subprocess
 import json
-import os
+
+from apps.maquinaria.models import Maquinaria
 
 class PrologService:
     def analyze_data(self, data):
@@ -12,6 +10,19 @@ class PrologService:
         Executes the Prolog analysis in a separate process to prevent Segfaults.
         """
         try:
+            # Enrich engine input with machinery availability by *type* (stable code),
+            # not by user-assigned machine name.
+            available_type_codes = list(
+                Maquinaria.objects.filter(
+                    disponible=True,
+                    tipo_maquinaria__codigo__isnull=False,
+                )
+                .values_list('tipo_maquinaria__codigo', flat=True)
+                .distinct()
+            )
+            engine_data = dict(data)
+            engine_data["machines"] = {"available_types": available_type_codes}
+
             # Path to the script
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             script_path = os.path.join(base_dir, 'script', 'run_analysis.py')
@@ -19,7 +30,7 @@ class PrologService:
             # Run subprocess
             process = subprocess.run(
                 ['python', script_path],
-                input=json.dumps(data),
+                input=json.dumps(engine_data),
                 text=True,
                 capture_output=True,
                 check=False 

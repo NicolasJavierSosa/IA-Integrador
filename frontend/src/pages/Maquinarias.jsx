@@ -115,6 +115,12 @@ const Maquinarias = () => {
     // Helper to get icon based on type name (simple mapping)
     const getIconForType = (typeName) => {
         const lower = typeName?.toLowerCase() || '';
+        if (lower.includes('chip')) return BoltIcon;
+        if (lower.includes('descorte')) return WrenchScrewdriverIcon;
+        if (lower.includes('reproces')) return WrenchScrewdriverIcon;
+        if (lower.includes('finger')) return ScissorsIcon;
+        if (lower.includes('caldera')) return BoltIcon;
+        if (lower.includes('pelet') || lower.includes('pellet')) return ArchiveBoxIcon;
         if (lower.includes('sierra')) return ScissorsIcon;
         if (lower.includes('camion') || lower.includes('monto')) return TruckIcon;
         if (lower.includes('secado')) return ArchiveBoxIcon;

@@ -1,6 +1,7 @@
 from django.db import models
 
 class TipoMaquinaria(models.Model):
+    codigo = models.CharField(max_length=50, unique=True, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
 

@@ -36,6 +36,16 @@ def run_analysis(data):
         # Extract data
         lot = data.get('lot', {})
         market = data.get('market', {})
+
+        machines = data.get('machines')
+        if machines is None:
+            # Backward-compatible default for callers that don't send machine availability.
+            available_types = {"chipeadora", "finger_joint", "reprocesadora", "caldera"}
+        else:
+            available_types = set(machines.get('available_types', []) or [])
+
+        def has_machine(type_code: str) -> bool:
+            return type_code in available_types
         
         # Clean previous facts not needed since this is a fresh process
         # But for good measure we just assert
@@ -83,7 +93,7 @@ def run_analysis(data):
         assert_fact("volatilidad_pellet", 'alta' if market.get('volatilidadPellets') else 'baja')
         assert_fact("capacidad_almacenamiento", safe_float(market.get('capacidadAlmacenamiento')))
         
-        assert_fact("maq_chipeadora", 'si')
+        assert_fact("maq_chipeadora", 'si' if has_machine('chipeadora') else 'no')
         
         # Precio chips: enviar como texto para comparaciones cualitativas (R15, R17, etc.)
         assert_fact("precio_chips", precio_chips_texto)
@@ -96,12 +106,14 @@ def run_analysis(data):
         assert_fact("volatilidad_chips", 'alta' if market.get('volatilidadChips') else 'baja')
         assert_fact("demanda_biomasa", 'alta' if market.get('demandaBiomasa') else 'baja')
         
-        assert_fact("caldera", 'encendida' if market.get('estadoCaldera') else 'apagada')
+        # Caldera debe considerar tanto la señal del mercado como la disponibilidad real.
+        caldera_encendida = bool(market.get('estadoCaldera')) and has_machine('caldera')
+        assert_fact("caldera", 'encendida' if caldera_encendida else 'apagada')
         assert_fact("stock_biomasa", 'suficiente' if market.get('stockBiomasa') else 'bajo') 
         
         assert_fact("precio_finger", safe_float(market.get('precioFinger')))
-        assert_fact("maq_finger", 'si')
-        assert_fact("maq_reprocesadora", 'si')
+        assert_fact("maq_finger", 'si' if has_machine('finger_joint') else 'no')
+        assert_fact("maq_reprocesadora", 'si' if has_machine('reprocesadora') else 'no')
         assert_fact("costo_flete", safe_float(market.get('costoFlete')))
         assert_fact("margen_ganancia", 20.0)
 

@@ -17,12 +17,6 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		return {(r.get("type"), r.get("value")) for r in response_json.get("recommendations", [])}
 
 	def test_integration_payload_roundtrip_and_history_saved(self):
-		chip_type, _ = TipoMaquinaria.objects.get_or_create(
-			codigo="chipeadora",
-			defaults={"nombre": "Chipeadora", "descripcion": ""},
-		)
-		Maquinaria.objects.create(nombre="Equipo X", tipo_maquinaria=chip_type, disponible=True)
-
 		payload = {
 			"lot": {
 				"category": "Chips",
@@ -289,3 +283,5 @@ class SubproductosAnalyzeIntegrationTests(APITestCase):
 		self.assertTrue(body2.get("success"))
 		# Sin chipeadora disponible NO debe sugerir chipear material
 		self.assertNotIn("chipear_material", self._values(body2))
+		# Y debería sugerir descartar
+		self.assertIn("descartar_material", self._values(body2))

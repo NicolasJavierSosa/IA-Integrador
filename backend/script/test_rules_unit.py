@@ -198,14 +198,12 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R13", "Chips + volumen>=100 => parcial(producir_chips)")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(150)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.assertParcialContains("producir_chips")
 
     def test_R13B_no_procesar_chips(self):
         self._announce("R13B", "Chips + volumen<100 => recomendar(no_procesar_chips)")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(50)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.assertRecomendarContains("no_procesar_chips")
 
     def test_R14_parcial_apto_solo_chips_por_falla_grave(self):
@@ -228,11 +226,17 @@ class PrologRulesUnitTests(unittest.TestCase):
         self.prolog.assertz("maq_chipeadora(no)")
         self.assertRecomendarNotContains("chipear_material")
 
+    def test_R14D_recomendar_descartar_material_si_no_hay_chipeadora(self):
+        self._announce("R14D", "Apto solo chips + maq_chipeadora=no => recomendar(descartar_material)")
+        self.prolog.assertz("tipo(madera_fallas)")
+        self.prolog.assertz("falla(pudricion_parcial)")
+        self.prolog.assertz("maq_chipeadora(no)")
+        self.assertRecomendarContains("descartar_material")
+
     def test_R15_prioridad_asegurar_venta_contrato(self):
         self._announce("R15", "Producir chips + precio medio/alto + volatilidad baja => prioridad(asegurar_venta_contrato)")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("precio_chips(medio)")
         self.prolog.assertz("volatilidad_chips(baja)")
         self.assertPrioridadContains("asegurar_venta_contrato")
@@ -241,7 +245,6 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R16", "Chips + sin corteza + especie pino/eucalipto => parcial(chip_pulpable)")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("corteza(no)")
         self.prolog.assertz("especie(pino)")
         self.assertParcialContains("chip_pulpable")
@@ -250,7 +253,6 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R17", "Chips + con corteza => parcial(chip_no_pulpable)")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("corteza(si)")
         self.assertParcialContains("chip_no_pulpable")
 
@@ -258,7 +260,6 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R18", "Chip no pulpable + demanda biomasa alta + stock bajo => suministro_caldera")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("corteza(si)")
         self.prolog.assertz("demanda_biomasa(alta)")
         self.prolog.assertz("stock_biomasa(bajo)")
@@ -268,7 +269,6 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R18B", "Chip no pulpable + stock suficiente => no_suministrar_caldera")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("corteza(si)")
         self.prolog.assertz("stock_biomasa(suficiente)")
         self.assertRecomendarContains("no_suministrar_caldera")
@@ -277,7 +277,6 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R19", "Chip no pulpable + caldera encendida + stock bajo => prioridad(suministrar_chip_caldera)")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("corteza(si)")
         self.prolog.assertz("caldera(encendida)")
         self.prolog.assertz("stock_biomasa(bajo)")
@@ -287,7 +286,6 @@ class PrologRulesUnitTests(unittest.TestCase):
         self._announce("R19B", "Chip pulpable + stock suficiente => vender_chip_pulpable")
         self.prolog.assertz("tipo(chips)")
         self.prolog.assertz("volumen(120)")
-        self.prolog.assertz("maq_chipeadora(si)")
         self.prolog.assertz("corteza(no)")
         self.prolog.assertz("especie(pino)")
         self.prolog.assertz("stock_biomasa(suficiente)")

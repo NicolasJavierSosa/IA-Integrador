@@ -137,14 +137,12 @@ prioridad(finger_joint_o_moldura) :-
 % REGLA 13: Validación de volumen suficiente para procesamiento de chips
 parcial(producir_chips) :-
     tipo(chips),
-    volumen(V), V >= 100,
-    maq_chipeadora(si).
+    volumen(V), V >= 100.
 
 % REGLA 13B: Volumen insuficiente de chips
 recomendar(no_procesar_chips) :-
     tipo(chips),
-    volumen(V), V < 100,
-    maq_chipeadora(si).
+    volumen(V), V < 100.
 
 % REGLA 14: Descarte de madera con fallas graves
 parcial(apto_solo_chips) :-
@@ -155,6 +153,11 @@ parcial(apto_solo_chips) :-
 recomendar(chipear_material) :-
     parcial(apto_solo_chips),
     maq_chipeadora(si).
+
+% REGLA 14D: Si solo sirve para chips pero NO hay chipeadora disponible, descartar
+recomendar(descartar_material) :-
+    parcial(apto_solo_chips),
+    maq_chipeadora(no).
 
 % REGLA 15: Asegurar venta por estabilidad de mercado
 % Si el precio está en rango medio-alto y el mercado es estable, asegurar venta por contrato
